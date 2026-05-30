@@ -24,7 +24,10 @@ Mac Mini de Bona; ele instala **uma vez** (gate humano):
 | `com.bonaos.ultracode-bridge.plist` | launchd que roda o watcher a cada 5 min |
 | `mission-example.md` | Missão `/ultracode` (com marcador) que a nuvem solta no Drive |
 
-Depois de instalado, a sessão da nuvem **dispara de fato** soltando a missão em
-`Drive:Jarvis-CloudBridge/inbox`.
+**Status (review do Codex, 2026-05-30):** aprovado como **relay manual**, não como daemon.
+Drive = fila; Mac mini = enforcement point que valida cada missão; READ_ONLY no início;
+launchd (`com.bonaos.ultracode-bridge.plist`) **adiado** para fase 2. Canal Drive
+`Jarvis-CloudBridge/{inbox,outbox}` já criado e privado; primeira missão read-only em
+`inbox/relay-validation-001.md` aguardando validação manual.
 
 Plano completo: `/root/.claude/plans/fizzy-sauteeing-fog.md` (na sessão).

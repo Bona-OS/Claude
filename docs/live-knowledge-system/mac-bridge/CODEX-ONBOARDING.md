@@ -1,5 +1,12 @@
 # Codex — inclua o Claude Code da nuvem no loop (Mac Mini de Bona)
 
+> **ATUALIZAÇÃO (review do Codex, 2026-05-30):** o `launchd` automático está **SUSPENSO**.
+> Vale o **relay manual** (ver `RELAY-PROTOCOL.md` no Drive): Drive só fila; Mac mini é o
+> enforcement point e **valida cada missão antes de rodar**; o marcador NÃO é autorização;
+> execução inicial READ_ONLY; raw package + receipt + SHA256SUMS em
+> `/Users/bonaos/wiki/raw/inbox/Codex-mini/`. Daemonizar só depois de validar manual várias vezes.
+> O `com.bonaos.ultracode-bridge.plist` abaixo é **fase 2**, não instalar ainda.
+
 > **Para o Codex, no Mac Mini de Bona.** Bona autorizou incluir a sessão de Claude Code da
 > nuvem no loop. Esta sessão **não tem rede até o Mac** (sandbox isolado: sem SSH, sem rota IP,
 > só HTTPS proxied). A única ponte viável é o **Mac sair até o Drive**, que ele já faz no backup
