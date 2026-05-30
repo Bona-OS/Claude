@@ -25,7 +25,11 @@ e 1 reconciliador:
   7. OpenClaw: ~/.openclaw
   8. Hermes: ~/.hermes e perfis
   9. Snapshot Drive (backup do dia) — confirmar se == canônico
- 10. Repo bedinjoao/live-knowledge-system (se acessível)
+ 10. Repo do sistema, LIDO LOCALMENTE pelo Codex (não depende de acesso GitHub na nuvem):
+     procurar o clone local de bedinjoao/live-knowledge-system (ex.: ~/Documents/Codex,
+     ~/dev, ~/repos). Se existir, ler. Se não, clonar com a credencial local do João
+     (git clone git@github.com:bedinjoao/live-knowledge-system) e ler. Comparar com o backup
+     do Drive (público/sanitizado) e com a wiki canônica.
 
 Para a PARTE CLAUDE CODE, extraia: papel (camada Code/Codex implementação/auditoria),
 permissões, e o contrato de integração Codex↔Claude Code (como o Codex dispara o claude CLI).
@@ -50,3 +54,7 @@ Fechamento: acione hermes-wiki-curator em DRY-RUN para propor a promoção pela 
 - Requer Claude Code **v2.1.154+** e `/ultracode` habilitado (Opus 4.8).
 - Os rascunhos lado-nuvem em `docs/live-knowledge-system/` (este repo) servem de baseline:
   o run no Mac confirma/expande e produz a versão canônica em `/raw`.
+- **Acesso GitHub na nuvem é opcional:** a sessão web está travada em `bona-os/claude` (não lê
+  `bedinjoao/live-knowledge-system`). Como o Codex lê o repo do sistema **localmente** no Mac
+  (passo 10), a auditoria não depende de ampliar esse acesso. Ampliar só ajuda se você quiser
+  que uma sessão web futura também leia o repo direto.
