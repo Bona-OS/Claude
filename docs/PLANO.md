@@ -1,7 +1,8 @@
 # Plano — FotoRestaura
 
 Empresa de **restauração de fotos antigas via WhatsApp**. Documento vivo: negócio, números,
-arquitetura e o que falta pra ir ao ar.
+arquitetura e o que falta pra ir ao ar. O passo a passo operacional (pesquisa → faturamento,
+com criativos via Higgsfield) está em [`EXECUCAO.md`](EXECUCAO.md).
 
 ---
 
