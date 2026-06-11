@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "grok-media": {
+      "command": "npx",
+      "args": ["-y", "tsx", "mcp/grok-media/src/index.ts"],
+      "env": {
+        "XAI_API_KEY": "${XAI_API_KEY}"
+      }
+    }
+  }
+}
