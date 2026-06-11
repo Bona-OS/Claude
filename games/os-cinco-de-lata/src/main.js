@@ -25,6 +25,16 @@ import { Phase10 } from './phases/phase10.js';
 
 const PHASE_CLASSES = [Phase01, Phase02, Phase03, Phase04, Phase05, Phase06, Phase07, Phase08, Phase09, Phase10];
 
+// artes pixel 16-bit geradas no Higgsfield (docs/PROMPTS.md) — cartões por tipo
+const CDN = 'https://d8j0ntlcm91z4.cloudfront.net/user_3Cs6n4P9VtDQBLcqUPlxk1nSd2p';
+const ART = {
+  track: `${CDN}/hf_20260611_195942_25fa81b5-cc73-42d0-9cd7-5c433ca90305.png`,
+  world: `${CDN}/hf_20260611_195943_1afb448a-5ae0-4a3b-b5ee-e91e5f0703d6.png`,
+  fight: `${CDN}/hf_20260611_195951_0216cb99-18ec-4435-8813-3f246532ad64.png`,
+  arcade: `${CDN}/hf_20260611_195952_0b6126dc-4b50-4c9f-b649-1aae8b9de0ef.png`,
+  title: `${CDN}/hf_20260611_195858_11234f63-3c22-43c1-9718-b6c453b50d3c.png`,
+};
+
 class Game {
   constructor() {
     this.state = 'BOOT';
@@ -89,7 +99,7 @@ class Game {
     this.currentPhase = new PHASE_CLASSES[id - 1]();
     this.scene = new THREE.Scene();
     this.currentPhase.build(this);
-    this.hud.card(this.currentPhase);
+    this.hud.card(this.currentPhase, ART[this.currentPhase.type]);
     this.hud.party(PARTY_MEMBERS, this.party.activeLeaderId);
     this.state = 'CARD';
     this.audio.playTheme(null);
@@ -106,7 +116,8 @@ class Game {
     this.hud.result(
       last ? '✦ A CASA AO LADO ✦' : 'VITÓRIA',
       text,
-      last ? 'ENTER · voltar ao mapa' : 'ENTER · mapa    R · jogar de novo'
+      last ? 'ENTER · voltar ao mapa' : 'ENTER · mapa    R · jogar de novo',
+      last ? ART.title : undefined
     );
   }
 

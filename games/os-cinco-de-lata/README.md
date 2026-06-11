@@ -1,71 +1,54 @@
-# Os Cinco de Lata — A Barra de Ferro
+# Os Cinco de Lata — Do Capim ao Grande Rio
 
-Vertical slice jogável do Capítulo 1 do livro *Os Cinco de Lata*, de
-Pedro de Jesus Ceni Bedin. Browser game 3D (Three.js), sem build, sem landing
-page — a primeira tela já é o jogo.
+Jogo 3D **pixelado estilo Final Fantasy V**, baseado no livro *Os Cinco de
+Lata*, de Pedro de Jesus Ceni Bedin. 10 fases num mapa-múndi, os cinco
+personagens jogáveis, trilha sonora celta de sintetizador gerada em código.
+A primeira tela já é o jogo — sem landing page.
 
 ## Como rodar
 
-Por usar ES modules, precisa de um servidor local (qualquer um):
+**Jeito mais fácil (Mac/qualquer um):** abra `dist/os-cinco-de-lata.html`
+com dois cliques. Tudo embutido (Three.js, fonte, música procedural).
 
+**Modo desenvolvimento:**
 ```bash
 cd games/os-cinco-de-lata
-python3 -m http.server 8000
-# abra http://localhost:8000
+python3 -m http.server 8000   # abra http://localhost:8000
 ```
 
-(ou `npx serve .`, ou a extensão Live Server do VS Code.)
-
-O Three.js já vem embutido em `vendor/` — o jogo roda offline. As artes do
-Higgsfield carregam do CDN deles; para tê-las locais: `bash assets/download.sh`
-(sem elas o jogo usa placeholders procedurais e continua jogável).
+Para regenerar o arquivo único: `node scripts/build-dist.mjs`.
+As artes do Higgsfield carregam do CDN (fallback procedural offline);
+cópias locais: `bash assets/download.sh`.
 
 ## O jogo
 
-Você é **Tarso**. Atravesse a barra de ferro gigante, colete as **5 lascas de
-papel de prata** ("pedaços de lua derretida") e chegue ao fim da barra, onde o
-capim se abre para a vista de **Mirmécia**.
+A jornada completa do livro, do Capítulo 1 ao 13: a Barra de Ferro, a
+queda Pra Baixo, as Montanhas de Pétalas, o Resgate de Trovão, a Corrida
+no Capim, o Ventre do Dragão, a forja da Escama, o Grande Rio, as Três
+Hostes e os Portões de Mirmécia — com o epílogo *A Casa ao Lado*.
 
-Mas a barra fica exposta demais — Ávio avisou. Quando ele gritar **"SOMBRA!"**,
-você tem ~3 segundos para entrar num **buraco de rebite** antes do bote do
-pássaro. Cada bote a descoberto custa um coração. Três corações e acabou.
-
-| Controle | Ação |
-|---|---|
-| WASD / setas | mover |
-| Shift | correr |
-| Espaço | pular |
-| R (no fim de jogo) | reiniciar |
+Controles e detalhes de cada fase: [`docs/GDD.md`](docs/GDD.md).
+Essencial: **←/→ + ENTER** no mapa, **1-5** troca o líder, **WASD** move,
+**E** habilidade, **M** som.
 
 ## O que foi feito
 
-- **Núcleo definido**: aventura/coleta 3D, loop de 30s (correr → coletar →
-  esconder da Sombra), vitória/derrota claras.
-- **Protótipo Three.js**: barra de ferro enferrujada com flanges e manchas,
-  buracos de rebite funcionais (abrigo), selva de capim com 340 lâminas
-  balançando, personagem em primitivas com armadura PBR metálica (papel de
-  prata), câmera em terceira pessoa com lerp, pulo/gravidade, colisão por
-  proximidade, HUD mínimo (lascas, corações, falas dos personagens).
-- **Direção visual via Higgsfield MCP**: 3 referências de mundo, 1 tela-título
-  com tipografia, 1 model sheet do Tarso — todas seguindo o Prompt Mestre da
-  saga (FF Tactics × Minimoys × chiaroscuro). Prompts documentados em
-  [`docs/PROMPTS.md`](docs/PROMPTS.md).
-- **Integração das referências**: paleta do jogo (ferrugem `#8a3b22`, pôr do
-  sol `#d98a4f`, capim `#3d6b23`) extraída das imagens; backdrop de Mirmécia
-  usa a arte gerada (com fallback procedural offline); tela de vitória usa a
-  key art de título.
-- **Eventos**: ciclo da Sombra (aviso → sombra crescendo no chão → mergulho do
-  pássaro → checagem de abrigo), falas do livro como mensagens de jogo.
+- **Pipeline pixel FFV** (`src/core/pixel.js`): render 480×270, paleta de
+  32 cores, dithering Bayer 4×4, upscale nearest — tecla P compara com/sem.
+- **Trilha celta procedural** (`src/core/audio.js`): jig 6/8, drone de
+  gaita, harpa, bodhrán — 5 temas + fanfarra/lamento, zero arquivos.
+- **Os 5 jogáveis** (`src/core/party.js`): troca de líder, fila de
+  seguidores, stats e habilidades distintas por personagem.
+- **Mapa-múndi FFV** (`src/world/worldmap.js`) com progressão salva.
+- **10 fases** (`src/phases/`) nos 4 tipos (track/arcade/world/fight),
+  todas com vitória/derrota e falas do livro.
+- **Direção visual Higgsfield**: 12 artes (5 cinematográficas + 7
+  pixel-art 16-bit) — prompts documentados em [`docs/PROMPTS.md`](docs/PROMPTS.md).
 
 ## Próximos upgrades possíveis
 
-1. **Trovão**: desbloquear a lagartixa como montaria na segunda metade da barra
-   (mais rápida, mas não cabe nos buracos — troca de risco).
-2. **Trocar primitivas por sprites/billboards** gerados do model sheet do
-   Tarso, ou modelos low-poly inspirados nele.
-3. **Fase 2 — Pra Baixo**: o escorregador de raiz para dentro de Mirmécia
-   (Capítulo 2), com as montanhas de pétalas.
-4. **Áudio**: vento no capim, o *clang* do bico, corneta de Mirmécia ao vencer.
-5. **Os outros quatro**: Brio, Tino, Garra e Ávio seguindo o jogador em fila
-   (boids simples) — e cada um perdível/resgatável.
-6. **Mobile**: controles de toque (joystick virtual).
+1. Cartões de intro únicos por fase (prompts prontos no PROMPTS.md).
+2. Sprites billboard dos personagens a partir do `px-lineup.png`.
+3. Chefes extras: a Grande Serpe e o Dragão dos Gigantes como fases bônus.
+4. Controles de toque (mobile) e gamepad.
+5. Modo "Livro 2": a faísca de Élitra (gancho da sequência).

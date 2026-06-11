@@ -85,3 +85,36 @@ concept art sheet, highly detailed
   colossal rusted iron beam, five tiny warriors in crumpled foil armor huddled in
   the reddish darkness, a sliver of golden light entering from above, dramatic
   chiaroscuro, macro scale fantasy`
+
+---
+
+# Leva 2 — Pixel-art 16-bit (expansão "Do Capim ao Grande Rio", 2026-06-11)
+
+Direção: **16-bit SNES pixel art, estilo Final Fantasy V, paleta limitada (~32 cores),
+crisp pixels**. Modelos: `nano_banana_pro` (mapa/título/lineup) e `z_image` (cartões).
+
+| Arquivo | Job ID | Uso no jogo |
+|---|---|---|
+| `px-worldmap.png` | `f266e6a7-93a5-4799-96af-1b42a1958f2f` | textura do mapa-múndi (worldmap.js) |
+| `px-title.png` | `11234f63-3c22-43c1-9718-b6c453b50d3c` | fundo da tela final "A Casa ao Lado" |
+| `px-lineup.png` | `44d8da9a-e23e-4eab-a515-aa82ade14345` | referência de cores dos 5 + Trovão + Élitra |
+| `px-card-track.png` | `25fa81b5-cc73-42d0-9cd7-5c433ca90305` | fundo dos cartões de fase tipo TRACK |
+| `px-card-world.png` | `1afb448a-5ae0-4a3b-b5ee-e91e5f0703d6` | fundo dos cartões tipo WORLD |
+| `px-card-fight.png` | `0216cb99-18ec-4435-8813-3f246532ad64` | fundo dos cartões tipo FIGHT |
+| `px-card-arcade.png` | `0b6126dc-4b50-4c9f-b649-1aae8b9de0ef` | fundo dos cartões tipo ARCADE |
+
+## Prompts prontos para a próxima leva (cartões por fase, 10×)
+
+Padrão: `16-bit SNES pixel art scene, Final Fantasy V style: [CENA], limited palette,
+crisp pixels, no text` — cenas sugeridas:
+
+1. a barra de ferro com os 5 e a sombra do pássaro (já coberto por px-card-track)
+2. queda dentro de um tubo de raiz escuro com luz rosa no fundo
+3. montanhas de pétalas e formigas-sentinela (coberto por px-card-world)
+4. lagartixa gigante presa sob raiz, 5 guerreirinhos ajudando
+5. corrida montada em lagartixa pelo capim ao pôr do sol
+6. interior âmbar pulsante do estômago de um dragão, montaria correndo
+7. forja à noite: martelo, bigorna de pedra, escama negra, faíscas azuis
+8. drakkar de papel-alumínio vs dorso do Leviatã (coberto por px-card-arcade)
+9. defesa do estandarte vs vespas (coberto por px-card-fight)
+10. portões de Mirmécia ao crepúsculo, princesa-formiga de coroa torta esperando

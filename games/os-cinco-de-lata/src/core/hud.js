@@ -72,19 +72,25 @@ export class HUD {
   }
   hideParty() { this.$('#hud-party').innerHTML = ''; }
 
-  // cartão de intro da fase (FFV style)
-  card(phase) {
+  // cartão de intro da fase (FFV style), com arte pixel do Higgsfield ao fundo
+  card(phase, artUrl) {
     this.$('#hud-card .card-type').textContent = `— ${phase.type.toUpperCase()} —`;
     this.$('#hud-card .card-name').textContent = phase.name;
     this.$('#hud-card .card-objective').textContent = phase.objective;
+    this.$('#hud-card').style.backgroundImage = artUrl
+      ? `linear-gradient(rgba(10,6,16,.55), rgba(10,6,16,.7)), url('${artUrl}')`
+      : '';
     this.show('#hud-card');
   }
   hideCard() { this.hide('#hud-card'); }
 
-  result(title, text, hint) {
+  result(title, text, hint, artUrl) {
     this.$('#hud-result .result-title').textContent = title;
     this.$('#hud-result .result-text').innerHTML = text;
     this.$('#hud-result .result-hint').textContent = hint;
+    this.$('#hud-result').style.backgroundImage = artUrl
+      ? `linear-gradient(rgba(10,6,16,.6), rgba(10,6,16,.75)), url('${artUrl}')`
+      : '';
     this.show('#hud-result');
   }
   hideResult() { this.hide('#hud-result'); }

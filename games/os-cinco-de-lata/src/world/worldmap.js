@@ -11,8 +11,8 @@ const NODES = [
   [8, 14], [20, 22], [30, 10], [38, 20], [48, 8],
 ];
 
-// arte do mapa gerada no Higgsfield (preenchida quando gerada); fallback procedural
-export let WORLDMAP_ART_URL = null;
+// arte do mapa gerada no Higgsfield (ver docs/PROMPTS.md); fallback procedural se offline
+export let WORLDMAP_ART_URL = 'https://d8j0ntlcm91z4.cloudfront.net/user_3Cs6n4P9VtDQBLcqUPlxk1nSd2p/hf_20260611_195856_f266e6a7-93a5-4799-96af-1b42a1958f2f.png';
 export function setWorldmapArt(url) { WORLDMAP_ART_URL = url; }
 
 function paintMap() {
