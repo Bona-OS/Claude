@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Os Cinco de Lata — A Barra de Ferro</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/": "./vendor/three/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="shards"><span class="icon">✦</span> Lascas de prata: <span id="shard-count">0</span>/5</div>
+    <div id="hearts">❤❤❤</div>
+  </div>
+  <div id="message"></div>
+  <div id="danger-vignette"></div>
+
+  <!-- Título não-bloqueante: o jogo já está rodando atrás -->
+  <div id="title-card">
+    <h1>Os Cinco de Lata</h1>
+    <p class="sub">A Barra de Ferro</p>
+    <p class="credits">baseado no livro de Pedro de Jesus Ceni Bedin</p>
+    <p class="howto">WASD / setas — mover &nbsp;·&nbsp; Shift — correr &nbsp;·&nbsp; Espaço — pular<br/>
+    Colete as <b>5 lascas de prata</b> e chegue ao fim da barra.<br/>
+    Quando Ávio gritar <b>“SOMBRA!”</b>, esconda-se num buraco de rebite.</p>
+  </div>
+
+  <!-- Fim de jogo -->
+  <div id="endscreen" class="hidden">
+    <div class="end-inner">
+      <h2 id="end-title"></h2>
+      <p id="end-text"></p>
+      <button id="restart">Jogar de novo</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
