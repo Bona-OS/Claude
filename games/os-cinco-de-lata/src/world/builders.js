@@ -446,6 +446,35 @@ export function animateGecko(gecko, moving) {
   const swing = moving ? Math.sin(performance.now() * 0.016) * 0.4 : 0;
   for (const n of ['legLF', 'legRB']) { const l = gecko.getObjectByName(n); if (l) l.position.y = 0.45 + Math.max(0, swing) * 0.3; }
   for (const n of ['legRF', 'legLB']) { const l = gecko.getObjectByName(n); if (l) l.position.y = 0.45 + Math.max(0, -swing) * 0.3; }
+
+  // rastro de poeira levantada pelas patas
+  if (!gecko.parent) return;
+  const ud = gecko.userData;
+  if (!ud.dust) { ud.dust = []; ud.lastDust = 0; }
+  const now = performance.now();
+  if (moving && now - ud.lastDust > 90) {
+    ud.lastDust = now;
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(0.28, 6, 5),
+      new THREE.MeshBasicMaterial({ color: 0xb08a5a, transparent: true, opacity: 0.5, depthWrite: false })
+    );
+    puff.position.set(
+      gecko.position.x + (Math.random() - 0.5) * 1.4,
+      0.25 + Math.random() * 0.3,
+      gecko.position.z + 1.6 + Math.random() * 0.8
+    );
+    puff.userData.born = now;
+    gecko.parent.add(puff);
+    ud.dust.push(puff);
+  }
+  for (let i = ud.dust.length - 1; i >= 0; i--) {
+    const p = ud.dust[i];
+    const age = (now - p.userData.born) / 700; // vida de 0.7s
+    if (age >= 1) { p.parent?.remove(p); p.material.dispose(); ud.dust.splice(i, 1); continue; }
+    p.scale.setScalar(1 + age * 2.2);
+    p.position.y += 0.012;
+    p.material.opacity = 0.5 * (1 - age);
+  }
 }
 
 // formiga-soldado de Mirmécia

@@ -44,7 +44,7 @@ export class Phase06 extends GamePhase {
     for (let z = -22; z > -LEN + 20; z -= 13) {
       const pillar = new THREE.Mesh(
         new THREE.CylinderGeometry(1.3, 1.7, 12, 7),
-        colorMat(0xd98a4f, { roughness: 0.5, emissive: 0xc2602f, emissiveIntensity: 0.9 })
+        colorMat(0xd98a4f, { roughness: 0.5, emissive: 0xc2602f, emissiveIntensity: 0.9, transparent: true })
       );
       pillar.position.set((Math.random() - 0.5) * HALF_W * 1.8, 6, z);
       pillar.userData.phase = Math.random() * Math.PI * 2;
@@ -128,6 +128,8 @@ export class Phase06 extends GamePhase {
     for (const pillar of this.pillars) {
       const s = 1 + Math.sin(performance.now() * 0.003 + pillar.userData.phase) * 0.18;
       pillar.scale.set(s, 1, s);
+      // pilar entre a câmera e o grupo fica translúcido — a tela nunca é cegada
+      pillar.material.opacity = pillar.position.z > g.z - 1.2 ? 0.22 : 1;
       if (!pillar.userData.hit && Math.abs(g.z - pillar.position.z) < 1.6 && Math.abs(g.x - pillar.position.x) < 1.9 * s) {
         pillar.userData.hit = true;
         this.stunned = 0.75;
@@ -143,8 +145,9 @@ export class Phase06 extends GamePhase {
     this.lantern.position.set(g.x, 4, g.z - 4);
     this.lantern.intensity = 100 + Math.sin(performance.now() * 0.008) * 14;
 
-    // a parede persegue (mais rápida se você derrapa)
-    this.wallZ -= (this.speed * 0.82 + 4.5) * dt;
+    // a parede persegue: punição por derrapar, mas velocidade máxima RECUPERA
+    // (24×0.8+3.2 = 22.4 < 24 — depois de um erro sempre dá pra fugir)
+    this.wallZ -= (this.speed * 0.8 + 3.2) * dt;
     this.wall.position.z = this.wallZ;
     if (this.wallZ <= g.z + 2) {
       ctx.audio.sfx('hurt');

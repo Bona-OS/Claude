@@ -70,13 +70,17 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
 }
 #hud-message.danger { color: #ffb09a; border-color: #c0392b; }
 
-/* ---------- vinheta de perigo ---------- */
+/* ---------- vinheta de perigo: moldura pulsante, NUNCA cobre o centro ---------- */
 #danger-vignette {
   position: absolute; inset: 0; pointer-events: none;
-  box-shadow: inset 0 0 180px 80px rgba(120, 10, 0, .85);
-  opacity: 0; transition: opacity .6s;
+  box-shadow: inset 0 0 42px 10px rgba(200, 30, 8, .55);
+  opacity: 0; transition: opacity .4s;
 }
-#danger-vignette.active { opacity: 1; }
+#danger-vignette.active { opacity: 1; animation: danger-pulse .7s ease-in-out infinite; }
+@keyframes danger-pulse {
+  0%, 100% { box-shadow: inset 0 0 42px 10px rgba(200, 30, 8, .55); }
+  50% { box-shadow: inset 0 0 26px 5px rgba(200, 30, 8, .35); }
+}
 
 /* ---------- cartão de intro de fase ---------- */
 #hud-card {
