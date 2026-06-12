@@ -16,12 +16,16 @@ export class Phase02 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    caveLights(scene, { fogColor: 0x2c1d11 });
+    caveLights(scene, { fogColor: 0x4a2f1b });
+    scene.fog.near = 12; scene.fog.far = 80;
+    // a queda iluminada: o lampião cai junto com o grupo
+    this.lantern = new THREE.PointLight(0xf0b46a, 90, 36);
+    scene.add(this.lantern);
 
     // o tubo (cilindro invertido, visto por dentro)
     const tube = new THREE.Mesh(
       new THREE.CylinderGeometry(TUBE_R, TUBE_R, DEPTH + 60, 14, 1, true),
-      colorMat(0x4a2f1b, { side: THREE.BackSide, roughness: 1 })
+      colorMat(0x6e4a26, { side: THREE.BackSide, roughness: 1, emissive: 0x3a2410, emissiveIntensity: 0.4 })
     );
     tube.position.y = -DEPTH / 2;
     scene.add(tube);
@@ -42,7 +46,7 @@ export class Phase02 extends GamePhase {
       const gapAngle = Math.random() * Math.PI * 2;
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(TUBE_R - 1.6, 1.1, 6, 14, Math.PI * 1.55),
-        colorMat(0x6e2c16, { roughness: 1 })
+        colorMat(0x8a5a2e, { roughness: 1, emissive: 0x6e2c16, emissiveIntensity: 0.55 })
       );
       ring.rotation.x = Math.PI / 2;
       ring.rotation.z = gapAngle;
@@ -83,6 +87,7 @@ export class Phase02 extends GamePhase {
 
   update(ctx, dt) {
     const p = this.player.position;
+    this.lantern.position.set(p.x, p.y - 6, p.z); // ilumina o que vem de baixo
     // controle radial durante a queda
     const { dx, dz } = ctx.input.axis();
     p.x = THREE.MathUtils.clamp(p.x + dx * 11 * dt, -TUBE_R + 1.4, TUBE_R - 1.4);

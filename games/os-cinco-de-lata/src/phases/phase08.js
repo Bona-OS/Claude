@@ -39,6 +39,7 @@ export class Phase08 extends GamePhase {
     ctx.party.spawn(scene, new THREE.Vector3(0, 1.2, 0));
     ctx.party.soloLeader(true);
     this.captain = ctx.party.leaderMesh;
+    this.captain.userData.riding = true;
     this.captain.scale.setScalar(0.7);
 
     // troncos e redemoinhos

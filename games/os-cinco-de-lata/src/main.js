@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PixelPipeline, PIXEL_W, PIXEL_H } from './core/pixel.js';
-import { setEnvironment } from './world/builders.js';
+import { setEnvironment, animateHeroes } from './world/builders.js';
 import { Input } from './core/input.js';
 import { HUD } from './core/hud.js';
 import { AudioEngine } from './core/audio.js';
@@ -157,6 +157,7 @@ class Game {
       if (this.input.justPressed('KeyR')) this.startPhase(this.currentPhaseId);
     }
 
+    if (this.scene) animateHeroes(this.scene, dt);
     this.pipeline.render(this.scene, this.camera);
   }
 }

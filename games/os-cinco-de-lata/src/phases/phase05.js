@@ -34,6 +34,7 @@ export class Phase05 extends GamePhase {
     ctx.party.spawn(scene, new THREE.Vector3(0, 1.6, 0));
     ctx.party.soloLeader(true);
     this.rider = ctx.party.leaderMesh;
+    this.rider.userData.riding = true;
     this.rider.scale.setScalar(0.8);
 
     // anéis de checkpoint

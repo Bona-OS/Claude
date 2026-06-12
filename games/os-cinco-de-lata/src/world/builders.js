@@ -27,8 +27,60 @@ let ENV = null;
 export function setEnvironment(texture) { ENV = texture; }
 
 // ---------------------------------------------------------------- luz / clima
+// motas flutuantes (pólen, vagalumes, brasas): THREE.Points que se auto-anima
+export function makeMotes(scene, { color = 0xf0d9a0, count = 130, box = [120, 26, 160], rise = 0.4, size = 0.45, center = [0, 8, -50] } = {}) {
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i * 3] = center[0] + (Math.random() - 0.5) * box[0];
+    pos[i * 3 + 1] = center[1] + (Math.random() - 0.5) * box[1];
+    pos[i * 3 + 2] = center[2] + (Math.random() - 0.5) * box[2];
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+    color, size, sizeAttenuation: true, transparent: true, opacity: 0.85, depthWrite: false,
+  }));
+  const seeds = Float32Array.from({ length: count }, () => Math.random() * 100);
+  pts.onBeforeRender = () => {
+    const t = performance.now() * 0.001;
+    const a = geo.attributes.position.array;
+    for (let i = 0; i < count; i++) {
+      a[i * 3] += Math.sin(t * 0.7 + seeds[i]) * 0.012;
+      a[i * 3 + 1] += rise * 0.016 + Math.sin(t + seeds[i]) * 0.004;
+      if (a[i * 3 + 1] > center[1] + box[1] / 2) a[i * 3 + 1] = center[1] - box[1] / 2;
+    }
+    geo.attributes.position.needsUpdate = true;
+  };
+  scene.add(pts);
+  return pts;
+}
+
+// nuvens chatas de fim de tarde, derivando devagar
+function makeClouds(scene, fogColor) {
+  for (let i = 0; i < 7; i++) {
+    const cloud = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: 0xf3e0c0, roughness: 1, emissive: fogColor, emissiveIntensity: 0.25 });
+    for (let j = 0; j < 4; j++) {
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(4 + Math.random() * 4, 8, 6), mat);
+      puff.scale.y = 0.32;
+      puff.position.set(j * 5 - 8 + Math.random() * 3, Math.random() * 1.5, (Math.random() - 0.5) * 5);
+      cloud.add(puff);
+    }
+    cloud.position.set((Math.random() - 0.5) * 260, 42 + Math.random() * 18, -40 - Math.random() * 160);
+    const drift = 0.25 + Math.random() * 0.4;
+    cloud.children[0].onBeforeRender = () => {
+      cloud.position.x += drift * 0.016;
+      if (cloud.position.x > 150) cloud.position.x = -150;
+    };
+    scene.add(cloud);
+  }
+}
+
 export function sunsetLights(scene, { fogColor = 0xd98a4f, fogNear = 40, fogFar = 150 } = {}) {
   if (ENV) scene.environment = ENV;
+  scene.environmentIntensity = 0.6;
+  makeClouds(scene, fogColor);
+  makeMotes(scene, { color: 0xf0d9a0, count: 130 }); // pólen dourado no ar
   scene.background = new THREE.Color(fogColor);
   scene.fog = new THREE.Fog(fogColor, fogNear, fogFar);
   const sun = new THREE.DirectionalLight(0xffc079, 2.4);
@@ -45,6 +97,8 @@ export function sunsetLights(scene, { fogColor = 0xd98a4f, fogNear = 40, fogFar 
 
 export function caveLights(scene, { fogColor = 0x2c1d11, amberGlow = true } = {}) {
   if (ENV) scene.environment = ENV;
+  scene.environmentIntensity = 0.3; // reflexo discreto: lata não vira bola de Natal no escuro
+  makeMotes(scene, { color: 0xe8945a, count: 90, rise: 0.9, size: 0.35, box: [60, 18, 140], center: [0, 6, -50] }); // brasas subindo
   scene.background = new THREE.Color(fogColor);
   scene.fog = new THREE.Fog(fogColor, 18, 90);
   const main = new THREE.DirectionalLight(0xe8945a, 2.0);
@@ -195,16 +249,43 @@ export function makeGoal(scene, { z = 0, bannerColor = 0xc0392b } = {}) {
 // ---------------------------------------------------------------- heróis
 export function makeHero(member) {
   const g = new THREE.Group();
-  const foil = new THREE.MeshStandardMaterial({ color: member.color, metalness: 1, roughness: 0.3 });
+  const foil = new THREE.MeshStandardMaterial({ color: member.color, metalness: 0.85, roughness: 0.42 });
   const wide = member.look.broad ? 1.3 : 1;
 
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.42 * wide, 0.7, 4, 10), foil);
-  body.position.y = 0.95; body.castShadow = true;
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.38 * wide, 0.55, 4, 10), foil);
+  body.position.y = 1.08; body.castShadow = true;
   g.add(body);
+
+  // pernas e braços articulados (pivô no quadril/ombro p/ ciclo de caminhada)
+  const limbs = {};
+  const limbMat = new THREE.MeshStandardMaterial({ color: member.color, metalness: 0.85, roughness: 0.5 });
+  for (const [name, x, y, len, r] of [
+    ['legL', -0.19 * wide, 0.62, 0.6, 0.11], ['legR', 0.19 * wide, 0.62, 0.6, 0.11],
+    ['armL', -0.48 * wide, 1.42, 0.55, 0.09], ['armR', 0.48 * wide, 1.42, 0.55, 0.09],
+  ]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, y, 0);
+    const limb = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 3, 6), limbMat);
+    limb.position.y = -len / 2 - r;
+    limb.castShadow = true;
+    pivot.add(limb);
+    g.add(pivot);
+    limbs[name] = pivot;
+  }
 
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.34, 10, 8), MAT.skin);
   head.position.y = 1.85; head.castShadow = true;
   g.add(head);
+  // olhos: vida no rostinho de lata
+  const eyeMat = colorMat(0x1d1c20, { roughness: 0.3 });
+  for (const ex of [-0.13, 0.13]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 5), eyeMat);
+    eye.position.set(ex, 1.89, 0.3);
+    g.add(eye);
+  }
+  g.userData.limbs = limbs;
+  g.userData.body = body;
+  g.userData.walkPhase = Math.random() * Math.PI * 2;
 
   const helm = new THREE.Mesh(new THREE.SphereGeometry(0.38, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), foil);
   helm.position.y = member.look.hood ? 1.88 : 1.92;
@@ -239,16 +320,54 @@ export function makeHero(member) {
     g.add(cape);
   }
 
-  for (const side of [-1, 1]) {
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.4, 3, 6), foil);
-    leg.position.set(side * 0.22 * wide, 0.32, 0);
-    leg.castShadow = true;
-    leg.name = side === -1 ? 'legL' : 'legR';
-    g.add(leg);
-  }
-
   g.scale.setScalar(member.scale);
   return g;
+}
+
+// anima qualquer herói da cena pelo deslocamento real do frame:
+// caminhada (pernas/braços alternados + bob), idle (respira), montado (agarrado)
+export function animateHeroes(scene, dt) {
+  if (dt <= 0) return;
+  const t = performance.now() * 0.001;
+  scene.traverse((obj) => {
+    const L = obj.userData.limbs;
+    if (!L) return;
+    const last = obj.userData.lastPos || (obj.userData.lastPos = obj.position.clone());
+    const speed = obj.position.distanceTo(last) / dt;
+    last.copy(obj.position);
+
+    if (obj.userData.riding) {
+      // montado: pernas abertas firmes, braços segurando
+      L.legL.rotation.x = -0.9; L.legR.rotation.x = -0.9;
+      L.legL.rotation.z = 0.5; L.legR.rotation.z = -0.5;
+      L.armL.rotation.x = -0.8; L.armR.rotation.x = -0.8;
+      obj.userData.body.position.y = 1.08;
+      return;
+    }
+    if (speed > 0.6) {
+      // ciclo de caminhada/corrida: frequência cresce com a velocidade
+      const stride = Math.min(0.85, 0.45 + speed * 0.03);
+      obj.userData.walkPhase += dt * Math.min(14, 4 + speed * 0.9);
+      const p = obj.userData.walkPhase;
+      L.legL.rotation.x = Math.sin(p) * stride;
+      L.legR.rotation.x = Math.sin(p + Math.PI) * stride;
+      L.armL.rotation.x = Math.sin(p + Math.PI) * stride * 0.7;
+      L.armR.rotation.x = Math.sin(p) * stride * 0.7;
+      L.legL.rotation.z = L.legR.rotation.z = 0;
+      obj.userData.body.position.y = 1.08 + Math.abs(Math.sin(p)) * 0.06;
+      obj.rotation.x = THREE.MathUtils.lerp(obj.rotation.x, Math.min(0.12, speed * 0.008), 0.2);
+    } else {
+      // idle: braços relaxam, peito de lata respira
+      for (const k of ['legL', 'legR', 'armL', 'armR']) {
+        L[k].rotation.x = THREE.MathUtils.lerp(L[k].rotation.x, 0, Math.min(1, dt * 8));
+        L[k].rotation.z = THREE.MathUtils.lerp(L[k].rotation.z, 0, Math.min(1, dt * 8));
+      }
+      L.armL.rotation.z = Math.sin(t * 1.6 + obj.userData.walkPhase) * 0.06;
+      L.armR.rotation.z = -Math.sin(t * 1.6 + obj.userData.walkPhase) * 0.06;
+      obj.userData.body.position.y = 1.08 + Math.sin(t * 1.8 + obj.userData.walkPhase) * 0.02;
+      obj.rotation.x = THREE.MathUtils.lerp(obj.rotation.x, 0, Math.min(1, dt * 6));
+    }
+  });
 }
 
 export function animateRun(hero, moving, sprint = 1) {

@@ -86,6 +86,11 @@ export class WorldMap {
     map.rotation.x = -Math.PI / 2;
     map.receiveShadow = true;
     scene.add(map);
+    // capim alto além da borda do mapa — sem "vazio laranja" nos nós extremos
+    const skirt = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), colorMat(0x2e5419, { roughness: 1 }));
+    skirt.rotation.x = -Math.PI / 2;
+    skirt.position.y = -0.15;
+    scene.add(skirt);
 
     // nós: bandeirinha (completa = pétala vermelha; ativa = dourada; travada = mastro)
     this.flags = [];

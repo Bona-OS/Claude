@@ -16,9 +16,13 @@ export class Phase03 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    caveLights(scene, { fogColor: 0x1a0e06, amberGlow: true });
+    caveLights(scene, { fogColor: 0x3a2410, amberGlow: true });
+    scene.fog.near = 26; scene.fog.far = 140;
+    // o lampião de Tino: furtivo, mas nunca cego
+    this.lantern = new THREE.PointLight(0xf0b46a, 60, 26);
+    scene.add(this.lantern);
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(AREA * 2.4, AREA * 2.4), colorMat(0x3a2410, { roughness: 1 }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(AREA * 2.4, AREA * 2.4), colorMat(0x56401e, { roughness: 1 }));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
@@ -120,6 +124,7 @@ export class Phase03 extends GamePhase {
     this.walker.update(dt);
     handleParty(ctx, this.walker);
     const p = this.walker.mesh.position;
+    this.lantern.position.set(p.x, 3.2, p.z);
 
     // pétalas
     for (let i = this.petals.length - 1; i >= 0; i--) {

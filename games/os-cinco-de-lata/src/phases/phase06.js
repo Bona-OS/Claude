@@ -17,8 +17,8 @@ export class Phase06 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    caveLights(scene, { fogColor: 0x6e2c16, amberGlow: true });
-    scene.fog.near = 14; scene.fog.far = 70;
+    caveLights(scene, { fogColor: 0x8a3b22, amberGlow: true });
+    scene.fog.near = 18; scene.fog.far = 110; // dá ~3s de reação a 24 u/s
 
     // túnel de carne âmbar
     const tube = new THREE.Mesh(
@@ -37,18 +37,39 @@ export class Phase06 extends GamePhase {
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // pilares de carne pulsante
+    // pilares de carne pulsante — brilham âmbar e marcam o chão (legíveis no escuro)
     this.pillars = [];
-    for (let z = -22; z > -LEN + 20; z -= 11) {
+    const ringGeo = new THREE.RingGeometry(1.9, 2.5, 16);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xf0b46a, transparent: true, opacity: 0.6 });
+    for (let z = -22; z > -LEN + 20; z -= 13) {
       const pillar = new THREE.Mesh(
         new THREE.CylinderGeometry(1.3, 1.7, 12, 7),
-        colorMat(0xc2602f, { roughness: 0.5, emissive: 0x8a3b22, emissiveIntensity: 0.5 })
+        colorMat(0xd98a4f, { roughness: 0.5, emissive: 0xc2602f, emissiveIntensity: 0.9 })
       );
       pillar.position.set((Math.random() - 0.5) * HALF_W * 1.8, 6, z);
       pillar.userData.phase = Math.random() * Math.PI * 2;
       scene.add(pillar);
       this.pillars.push(pillar);
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(pillar.position.x, 0.06, z);
+      scene.add(ring);
     }
+
+    // nódulos bioluminescentes espiralando pelas paredes: senso de rumo e velocidade
+    const nodMat = new THREE.MeshBasicMaterial({ color: 0xf0b46a });
+    const nodGeo = new THREE.SphereGeometry(0.32, 6, 5);
+    for (let z = -8; z > -LEN - 10; z -= 7) {
+      const a = z * 0.22;
+      const nod = new THREE.Mesh(nodGeo, nodMat);
+      nod.position.set(Math.cos(a) * (HALF_W + 2.2), 5.5 + Math.sin(a) * 4.5, z);
+      scene.add(nod);
+    }
+
+    // a luz que o grupo carrega: lampião de Tino aceso no lombo de Trovão
+    this.lantern = new THREE.PointLight(0xf0b46a, 110, 42);
+    this.lantern.position.set(0, 4, 0);
+    scene.add(this.lantern);
 
     // a luz no fim
     const glow = new THREE.PointLight(0xf3e9d2, 60, 90);
@@ -66,6 +87,7 @@ export class Phase06 extends GamePhase {
     ctx.party.spawn(scene, new THREE.Vector3(0, 1.6, 0));
     ctx.party.soloLeader(true);
     this.rider = ctx.party.leaderMesh;
+    this.rider.userData.riding = true;
     this.rider.scale.setScalar(0.8);
 
     // a parede de carne que persegue
@@ -108,7 +130,7 @@ export class Phase06 extends GamePhase {
       pillar.scale.set(s, 1, s);
       if (!pillar.userData.hit && Math.abs(g.z - pillar.position.z) < 1.6 && Math.abs(g.x - pillar.position.x) < 1.9 * s) {
         pillar.userData.hit = true;
-        this.stunned = 1.1;
+        this.stunned = 0.75;
         ctx.audio.sfx('hurt');
         if (this.hearts.hit('A parede de carne se fechou em volta — Trovão se arrancou no susto!')) {
           return this.onLose(ctx, 'O âmbar escureceu. O dragão nem percebeu o lanche.');
@@ -117,8 +139,12 @@ export class Phase06 extends GamePhase {
       }
     }
 
+    // o lampião acompanha o grupo
+    this.lantern.position.set(g.x, 4, g.z - 4);
+    this.lantern.intensity = 100 + Math.sin(performance.now() * 0.008) * 14;
+
     // a parede persegue (mais rápida se você derrapa)
-    this.wallZ -= (this.speed * 0.82 + 6) * dt;
+    this.wallZ -= (this.speed * 0.82 + 4.5) * dt;
     this.wall.position.z = this.wallZ;
     if (this.wallZ <= g.z + 2) {
       ctx.audio.sfx('hurt');
