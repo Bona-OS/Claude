@@ -85,7 +85,7 @@ export class Phase06 extends GamePhase {
 
   _hud(ctx) {
     const prog = Math.min(100, Math.round((-this.gecko.position.z / LEN) * 100));
-    ctx.hud.setStatus(`☀ ${prog}%   ${this.hearts.display}`);
+    ctx.hud.setStatus(`SAIDA ${prog}%   ${this.hearts.display}`);
   }
 
   update(ctx, dt) {

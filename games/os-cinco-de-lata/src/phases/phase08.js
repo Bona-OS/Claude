@@ -84,7 +84,7 @@ export class Phase08 extends GamePhase {
 
   _hud(ctx) {
     const prog = Math.min(100, Math.round((-this.boat.position.z / LEN) * 100));
-    ctx.hud.setStatus(`⛵ ${prog}%   ${this.hearts.display}`);
+    ctx.hud.setStatus(`TRAVESSIA ${prog}%   ${this.hearts.display}`);
   }
 
   _warningTime(ctx) { return ctx.party.activeLeaderId === 5 ? 4.4 : 3.0; }

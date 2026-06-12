@@ -74,6 +74,7 @@ class Game {
 
     this.lastTime = performance.now();
     this.loop();
+    window.__OCDL = this; // handle de debug/automação
   }
 
   partyList() { return PARTY_MEMBERS; }

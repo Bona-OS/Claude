@@ -3,26 +3,28 @@
 export class Input {
   constructor() {
     this.keys = {};
-    this.pressedQueue = new Set();
+    this.pressQueue = new Map(); // code → contagem (não perde presses em frames lentos)
     this.anyListeners = [];
     addEventListener('keydown', (e) => {
-      if (!this.keys[e.code]) this.pressedQueue.add(e.code);
+      if (!e.repeat) this.pressQueue.set(e.code, (this.pressQueue.get(e.code) || 0) + 1);
       this.keys[e.code] = true;
       for (const cb of this.anyListeners) cb(e.code);
       if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
     });
     addEventListener('keyup', (e) => { this.keys[e.code] = false; });
-    this.pressed = new Set();
+    this.pressed = new Map();
   }
 
   // chamar uma vez por frame, no começo do loop
   beginFrame() {
-    this.pressed = this.pressedQueue;
-    this.pressedQueue = new Set();
+    this.pressed = this.pressQueue;
+    this.pressQueue = new Map();
   }
 
   down(...codes) { return codes.some((c) => this.keys[c]); }
   justPressed(...codes) { return codes.some((c) => this.pressed.has(c)); }
+  // quantas vezes a(s) tecla(s) foram pressionadas neste frame
+  presses(...codes) { return codes.reduce((n, c) => n + (this.pressed.get(c) || 0), 0); }
 
   // eixo de movimento WASD/setas normalizado
   axis() {

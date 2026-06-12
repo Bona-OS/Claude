@@ -23,8 +23,8 @@ export class Phase10 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    this.sun = sunsetLights(scene, { fogColor: 0xa64b2a, fogNear: 30, fogFar: 130 });
-    makeGround(scene, { y: 0, z: -LEN / 2, color: 0x3a2410 });
+    this.sun = sunsetLights(scene, { fogColor: 0xc2602f, fogNear: 35, fogFar: 140 });
+    makeGround(scene, { y: 0, z: -LEN / 2, color: 0x5e2715 });
     this.grass = makeGrassField(scene, { count: 160, innerGap: HALF_W * 2 + 14, spread: 30, zMin: -LEN, zMax: 20, baseY: 0 });
     makeBackdrop(scene, { texture: mirmeciaSilhouette(), w: 220, h: 110, position: [0, 30, -LEN - 60] });
 
@@ -82,7 +82,7 @@ export class Phase10 extends GamePhase {
   _hud(ctx) {
     if (this.act === 1) {
       const prog = Math.min(100, Math.round((-this.gecko.position.z / (LEN - 30)) * 100));
-      ctx.hud.setStatus(`⚔ ${prog}%   ${this.hearts.display}`);
+      ctx.hud.setStatus(`PORTAO ${prog}%   ${this.hearts.display}`);
     } else {
       ctx.hud.setStatus(`Élitra: ${'◆'.repeat(3 - this.duel.blocks)}${'◇'.repeat(this.duel.blocks)}   ${this.hearts.display}  — Garra (4) + E no tempo!`);
     }

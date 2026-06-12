@@ -13,7 +13,7 @@ export const MAT = {
   dark: new THREE.MeshStandardMaterial({ color: 0x17110d, roughness: 0.9 }),
   amber: new THREE.MeshStandardMaterial({ color: 0xc2602f, roughness: 0.5, emissive: 0x6e2c16, emissiveIntensity: 0.6 }),
   petal: new THREE.MeshStandardMaterial({ color: 0xe07a9a, roughness: 0.7, side: THREE.DoubleSide }),
-  scale: new THREE.MeshStandardMaterial({ color: 0x2c2c34, metalness: 0.8, roughness: 0.4 }),
+  scale: new THREE.MeshStandardMaterial({ color: 0x4a4a58, metalness: 0.85, roughness: 0.35 }),
   water: new THREE.MeshStandardMaterial({ color: 0x274b8a, roughness: 0.25, metalness: 0.1 }),
 };
 
@@ -47,11 +47,11 @@ export function caveLights(scene, { fogColor = 0x2c1d11, amberGlow = true } = {}
   if (ENV) scene.environment = ENV;
   scene.background = new THREE.Color(fogColor);
   scene.fog = new THREE.Fog(fogColor, 18, 90);
-  const main = new THREE.DirectionalLight(0xe8945a, 1.2);
+  const main = new THREE.DirectionalLight(0xe8945a, 2.0);
   main.position.set(10, 30, 10);
   main.castShadow = true;
   scene.add(main, main.target);
-  scene.add(new THREE.HemisphereLight(amberGlow ? 0xc2602f : 0x69a0f0, 0x1a0e06, 0.7));
+  scene.add(new THREE.HemisphereLight(amberGlow ? 0xd9863f : 0x69a0f0, 0x3a2410, 1.25));
   return main;
 }
 
@@ -389,21 +389,43 @@ export function makeElitra() {
   return g;
 }
 
-// o drakkar "A Lata"
+// o drakkar "A Lata" — silhueta de barco legível, não um bloco
 export function makeBoat() {
   const g = new THREE.Group();
-  const hull = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1, 7), MAT.foil);
-  hull.position.y = 0.5;
+  // casco afilado: caixa central + laterais escuras inclinadas
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.9, 6.4), MAT.foil);
+  hull.position.y = 0.45;
   hull.castShadow = true;
   g.add(hull);
-  const prow = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.6, 6), MAT.foil);
-  prow.position.set(0, 1.3, 3.6);
+  for (const side of [-1, 1]) {
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.1, 6.8), colorMat(0x83858f, { metalness: 0.9, roughness: 0.4 }));
+    board.position.set(side * 1.45, 0.6, 0);
+    board.rotation.z = side * 0.18;
+    g.add(board);
+  }
+  // proa de drakkar erguida
+  const prow = new THREE.Mesh(new THREE.ConeGeometry(0.4, 2, 6), MAT.foil);
+  prow.position.set(0, 1.4, 3.4);
+  prow.rotation.x = 0.5;
   g.add(prow);
-  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 4, 6), MAT.iron);
-  mast.position.y = 2.5;
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.6, 6), MAT.iron);
+  mast.position.y = 2.6;
   g.add(mast);
-  const sail = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.2), new THREE.MeshStandardMaterial({ color: 0xdcdce6, metalness: 0.8, roughness: 0.35, side: THREE.DoubleSide }));
-  sail.position.set(0, 2.6, -0.2);
+  const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.4, 6), MAT.iron);
+  boom.rotation.z = Math.PI / 2;
+  boom.position.set(0, 3.9, 0);
+  g.add(boom);
+  // vela menor, translúcida, com listra — lê como pano, não como muro
+  const sailTex = canvasTexture(64, 64, (c2d, w, h) => {
+    c2d.fillStyle = '#dcdce6'; c2d.fillRect(0, 0, w, h);
+    c2d.fillStyle = '#c0392b';
+    for (let i = 0; i < 3; i++) c2d.fillRect(0, 10 + i * 20, w, 8);
+  });
+  const sail = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.2, 1.9),
+    new THREE.MeshStandardMaterial({ map: sailTex, roughness: 0.7, transparent: true, opacity: 0.92, side: THREE.DoubleSide })
+  );
+  sail.position.set(0, 2.85, -0.15);
   g.add(sail);
   return g;
 }

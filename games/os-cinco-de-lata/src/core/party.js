@@ -48,13 +48,20 @@ export class PartyManager {
   get leader() { return PARTY_MEMBERS[this.activeLeaderId - 1]; }
   member(id) { return PARTY_MEMBERS[id - 1]; }
 
-  // cria os 5 modelos e adiciona à cena; o líder é controlado pela fase
+  // cria os 5 modelos e adiciona à cena; o líder é controlado pela fase.
+  // Seguidores nascem enfileirados atrás (não empilhados no líder).
   spawn(scene, position) {
     this.positionHistory = [];
     this.meshes.clear();
+    let slot = 0;
     for (const m of PARTY_MEMBERS) {
       const mesh = makeHero(m);
       mesh.position.copy(position);
+      if (m.id !== this.activeLeaderId) {
+        slot++;
+        mesh.position.z += slot * 1.5;
+        mesh.position.x += (slot % 2 === 0 ? -0.6 : 0.6);
+      }
       scene.add(mesh);
       this.meshes.set(m.id, mesh);
     }

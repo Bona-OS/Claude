@@ -68,7 +68,7 @@ export class Phase09 extends GamePhase {
   }
 
   _hud(ctx) {
-    ctx.hud.setStatus(`Hoste ${this.wave}/3 · 🐝 ${this.wasps.length} · ❀ ${'●'.repeat(this.bannerHP)}   ${this.hearts.display}`);
+    ctx.hud.setStatus(`HOSTE ${this.wave}/3 · VESPAS ${this.wasps.length} · FLOR ${'●'.repeat(this.bannerHP)}   ${this.hearts.display}`);
   }
 
   update(ctx, dt) {

@@ -94,7 +94,7 @@ export class Phase03 extends GamePhase {
   }
 
   _hud(ctx) {
-    ctx.hud.setStatus(`❀ ${this.collected}/3   ${this.hearts.display}`);
+    ctx.hud.setStatus(`PETALAS ${this.collected}/3   ${this.hearts.display}`);
   }
 
   _seen(ctx, guard) {

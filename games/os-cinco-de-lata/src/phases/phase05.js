@@ -65,7 +65,7 @@ export class Phase05 extends GamePhase {
   }
 
   _hud(ctx) {
-    ctx.hud.setStatus(`◯ ${this.passed}/${RINGS}   ⏱ ${Math.ceil(this.time)}s`);
+    ctx.hud.setStatus(`ANEIS ${this.passed}/${RINGS} · TEMPO ${Math.ceil(this.time)}s`);
   }
 
   update(ctx, dt) {

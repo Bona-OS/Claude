@@ -78,7 +78,7 @@ export class Phase02 extends GamePhase {
 
   _hud(ctx) {
     const prog = Math.min(100, Math.round((-this.player.position.y / DEPTH) * 100));
-    ctx.hud.setStatus(`▼ ${prog}%   ${this.hearts.display}`);
+    ctx.hud.setStatus(`DESCIDA ${prog}%   ${this.hearts.display}`);
   }
 
   update(ctx, dt) {

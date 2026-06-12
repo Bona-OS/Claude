@@ -147,12 +147,13 @@ export class WorldMap {
         ctx.audio.sfx('pickup');
       }
     }
-    // navegação entre nós
-    if (ctx.input.justPressed('ArrowRight', 'KeyD') && this.cursor < 9 && ctx.save.isUnlocked(this.cursor + 2)) {
-      this.cursor++; this._updateHud(); ctx.audio.sfx('step');
+    // navegação entre nós (por contagem: não perde presses em frames lentos)
+    let steps = ctx.input.presses('ArrowRight', 'KeyD') - ctx.input.presses('ArrowLeft', 'KeyA');
+    while (steps > 0 && this.cursor < 9 && ctx.save.isUnlocked(this.cursor + 2)) {
+      this.cursor++; steps--; this._updateHud(); ctx.audio.sfx('step');
     }
-    if (ctx.input.justPressed('ArrowLeft', 'KeyA') && this.cursor > 0) {
-      this.cursor--; this._updateHud(); ctx.audio.sfx('step');
+    while (steps < 0 && this.cursor > 0) {
+      this.cursor--; steps++; this._updateHud(); ctx.audio.sfx('step');
     }
     if (ctx.input.justPressed('Enter')) {
       const id = this.cursor + 1;

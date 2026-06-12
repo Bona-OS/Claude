@@ -32,10 +32,14 @@ export class Phase07 extends GamePhase {
     this.scale = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 0.4, 8), MAT.scale);
     this.scale.position.set(0, 2.3, -6);
     scene.add(this.scale);
-    const fire = new THREE.PointLight(0xc2602f, 40, 30);
-    fire.position.set(4, 3, -6);
+    const fire = new THREE.PointLight(0xe8945a, 90, 45);
+    fire.position.set(4, 4, -6);
     scene.add(fire);
     this.fire = fire;
+    // brasas da forja: preenchimento quente para a cena não afogar no escuro
+    const embers = new THREE.PointLight(0xc2602f, 50, 60);
+    embers.position.set(-4, 5, 0);
+    scene.add(embers);
 
     // o martelo
     this.hammer = new THREE.Group();
@@ -83,9 +87,9 @@ export class Phase07 extends GamePhase {
       for (let i = 0; i <= 20; i++) {
         bar += i === pos ? '◆' : (i >= 8 && i <= 12 ? '▒' : '·');
       }
-      ctx.hud.setStatus(`🔨 ${this.hammered}/${HAMMERS}  [${bar}]`);
+      ctx.hud.setStatus(`MARTELO ${this.hammered}/${HAMMERS}  [${bar}]`);
     } else {
-      ctx.hud.setStatus(`🎯 ${this.shot}/${TARGETS} — mire com ←/→ e dispare com E`);
+      ctx.hud.setStatus(`ALVOS ${this.shot}/${TARGETS} — mire com setas e dispare com E`);
     }
   }
 

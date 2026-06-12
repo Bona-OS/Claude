@@ -74,7 +74,7 @@ export class Phase01 extends GamePhase {
   }
 
   _hud(ctx) {
-    ctx.hud.setStatus(`✦ ${this.collected}/${SHARDS}   ${this.hearts.display}`);
+    ctx.hud.setStatus(`LASCAS ${this.collected}/${SHARDS}   ${this.hearts.display}`);
   }
 
   _inHole(pos) {
