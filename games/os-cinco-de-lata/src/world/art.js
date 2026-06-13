@@ -1,0 +1,9 @@
+// Arte pintada no Higgsfield (ver design/assets.csv e docs/PROMPTS.md).
+// Cada fase carrega seu horizonte com fallback procedural se offline.
+const CDN = 'https://d8j0ntlcm91z4.cloudfront.net/user_3Cs6n4P9VtDQBLcqUPlxk1nSd2p';
+export const ART = {
+  capim: `${CDN}/hf_20260613_013436_fe5a4252-aa99-4f12-b79f-cc132a80d550.jpeg`,    // fases 5 e 9
+  floresta: `${CDN}/hf_20260613_013439_67bc2fed-86cd-462b-b073-917831e78583.jpeg`, // fase 4
+  rio: `${CDN}/hf_20260613_013442_f02a91e5-a012-4537-9b1d-bb308798c534.png`,       // fase 8
+  mirmecia: `${CDN}/hf_20260613_013445_a923f0f0-eceb-4240-9d77-3d84fb8dbda4.jpeg`, // fase 10
+};

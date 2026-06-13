@@ -118,3 +118,17 @@ crisp pixels, no text` — cenas sugeridas:
 8. drakkar de papel-alumínio vs dorso do Leviatã (coberto por px-card-arcade)
 9. defesa do estandarte vs vespas (coberto por px-card-fight)
 10. portões de Mirmécia ao crepúsculo, princesa-formiga de coroa torta esperando
+
+## Rodada 3 — horizontes pintados + capa de publicação (2026-06-13)
+
+STYLE FORMULA (inserida byte-idêntica em todos os prompts):
+> chunky 16-bit pixel art in the style of SNES Final Fantasy V with dense hand-placed pixel clusters and ordered dithering; bold readable silhouettes with dark rust outlines; environment in burnt-orange sunset skies, rust-red earth and deep grass greens with charcoal shadows, heroes in bright silver tin-foil tones contrasting the surroundings, hazards and pickups marked with warm amber glow; melancholic golden-hour adventure mood with soft horizontal light; high contrast between game elements and backgrounds, clean readable silhouettes, consistent wide panoramic horizon perspective across all assets
+
+| asset | modelo | uso |
+|---|---|---|
+| bg_capim (fe5a4252) | nano_banana_flash 16:9 | horizonte fases 5 e 9 |
+| bg_floresta (67bc2fed) | nano_banana_flash 16:9 | horizonte fase 4 |
+| bg_rio (f02a91e5) | nano_banana_flash 16:9 | horizonte fase 8 |
+| bg_mirmecia (a923f0f0) | nano_banana_flash 16:9 | horizonte fase 10 |
+| thumbnail (31c1abcc) | nano_banana_flash 16:9 | capa OG/catálogo do deploy |
+| favicon (0ab59ab1) | gpt_image_2 1:1 | favicon do deploy |

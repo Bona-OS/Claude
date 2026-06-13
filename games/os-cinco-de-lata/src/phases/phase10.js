@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { GamePhase, Hearts, dist2d } from './framework.js';
+import { ART } from '../world/art.js';
 import {
   sunsetLights, makeGround, makeGrassField, makeGecko, animateGecko,
   makeElitra, makeAnt, colorMat, makeBackdrop, mirmeciaSilhouette,
@@ -26,7 +27,7 @@ export class Phase10 extends GamePhase {
     this.sun = sunsetLights(scene, { fogColor: 0xc2602f, fogNear: 35, fogFar: 140 });
     makeGround(scene, { y: 0, z: -LEN / 2, color: 0x5e2715 });
     this.grass = makeGrassField(scene, { count: 160, innerGap: HALF_W * 2 + 14, spread: 30, zMin: -LEN, zMax: 20, baseY: 0 });
-    makeBackdrop(scene, { texture: mirmeciaSilhouette(), w: 220, h: 110, position: [0, 30, -LEN - 60] });
+    makeBackdrop(scene, { texture: mirmeciaSilhouette(), url: ART.mirmecia, w: 240, h: 120, position: [0, 32, -LEN - 60] });
 
     // barricadas de Mirmécia (quebráveis com Trovão)
     this.barricades = [];

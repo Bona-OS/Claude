@@ -230,6 +230,16 @@ export function makeBackdrop(scene, { texture, url, w = 150, h = 75, position = 
   return plane;
 }
 
+// horizonte pintado (arte do Higgsfield) com fallback em gradiente de céu
+export function horizonArt(scene, url, { w = 320, h = 110, position = [0, 30, -300], sky = '#c2602f', ground = '#3a2410' } = {}) {
+  const fallback = canvasTexture(256, 96, (g, cw, ch) => {
+    const grad = g.createLinearGradient(0, 0, 0, ch);
+    grad.addColorStop(0, '#e8945a'); grad.addColorStop(0.55, sky); grad.addColorStop(1, ground);
+    g.fillStyle = grad; g.fillRect(0, 0, cw, ch);
+  });
+  return makeBackdrop(scene, { texture: fallback, url, w, h, position });
+}
+
 export function makeGoal(scene, { z = 0, bannerColor = 0xc0392b } = {}) {
   const goal = new THREE.Group();
   for (const side of [-1, 1]) {
