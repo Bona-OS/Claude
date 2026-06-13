@@ -17,7 +17,9 @@ export class Phase07 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    caveLights(scene, { fogColor: 0x1a0e06 });
+    caveLights(scene, { fogColor: 0x2c1d11 });
+    scene.environmentIntensity = 0.8; // a forja é um poço de luz na noite
+    scene.add(new THREE.HemisphereLight(0xd9863f, 0x3a2410, 1.2));
 
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), colorMat(0x2c1d11, { roughness: 1 }));
     floor.rotation.x = -Math.PI / 2;
@@ -32,14 +34,18 @@ export class Phase07 extends GamePhase {
     this.scale = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 0.4, 8), MAT.scale);
     this.scale.position.set(0, 2.3, -6);
     scene.add(this.scale);
-    const fire = new THREE.PointLight(0xe8945a, 90, 45);
+    const fire = new THREE.PointLight(0xe8945a, 150, 60);
     fire.position.set(4, 4, -6);
     scene.add(fire);
     this.fire = fire;
     // brasas da forja: preenchimento quente para a cena não afogar no escuro
-    const embers = new THREE.PointLight(0xc2602f, 50, 60);
-    embers.position.set(-4, 5, 0);
+    const embers = new THREE.PointLight(0xc2602f, 110, 80);
+    embers.position.set(-4, 6, 0);
     scene.add(embers);
+    // clarão alto da fornalha sobre a bigorna
+    const overhead = new THREE.PointLight(0xd9863f, 90, 70);
+    overhead.position.set(0, 12, -4);
+    scene.add(overhead);
 
     // o martelo
     this.hammer = new THREE.Group();
@@ -181,6 +187,6 @@ export class Phase07 extends GamePhase {
     // câmera fixa de forja
     ctx.camera.position.lerp(new THREE.Vector3(this.stage === 'forge' ? 6 : 0, 6, 6), Math.min(1, dt * 3));
     ctx.camera.lookAt(0, 2, this.stage === 'forge' ? -6 : -16);
-    this.fire.intensity = 35 + Math.sin(performance.now() * 0.01) * 10;
+    this.fire.intensity = 150 + Math.sin(performance.now() * 0.01) * 35;
   }
 }

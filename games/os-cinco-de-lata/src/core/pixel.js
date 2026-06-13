@@ -1,7 +1,7 @@
-// Pipeline de pixelização estilo Final Fantasy V:
-// cena → WebGLRenderTarget 480×270 (nearest) → quad fullscreen com
-// quantização para paleta de 32 cores + dithering Bayer 4×4.
-// O canvas fica em 480×270 e o CSS estica com image-rendering: pixelated.
+// Pipeline de pixelização estilo Final Fantasy V "HD-2D":
+// cena → RT 480×270 → bright-pass (240×135) → blur gaussiano H+V →
+// composição com bloom → quantização para paleta de 32 cores + dithering
+// Bayer 4×4. O canvas fica em 480×270 e o CSS estica pixelated.
 
 import * as THREE from 'three';
 
@@ -27,8 +27,43 @@ const PALETTE = [
   '#c0392b', '#e07a9a',
 ];
 
-const frag = /* glsl */ `
+const vert = /* glsl */ `
+  varying vec2 vUv;
+  void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+`;
+
+// extrai só o que brilha (luzes, emissivos, céu estourado)
+const brightFrag = /* glsl */ `
   uniform sampler2D tDiffuse;
+  varying vec2 vUv;
+  void main() {
+    vec3 c = texture2D(tDiffuse, vUv).rgb;
+    float lum = dot(c, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(c * smoothstep(0.62, 0.9, lum), 1.0);
+  }
+`;
+
+// gaussiano 9-tap separável
+const blurFrag = /* glsl */ `
+  uniform sampler2D tDiffuse;
+  uniform vec2 uDir; // (1/w, 0) ou (0, 1/h)
+  varying vec2 vUv;
+  void main() {
+    float w[5];
+    w[0] = 0.227027; w[1] = 0.194594; w[2] = 0.121622; w[3] = 0.054054; w[4] = 0.016216;
+    vec3 c = texture2D(tDiffuse, vUv).rgb * w[0];
+    for (int i = 1; i < 5; i++) {
+      c += texture2D(tDiffuse, vUv + uDir * float(i)).rgb * w[i];
+      c += texture2D(tDiffuse, vUv - uDir * float(i)).rgb * w[i];
+    }
+    gl_FragColor = vec4(c, 1.0);
+  }
+`;
+
+const quantFrag = /* glsl */ `
+  uniform sampler2D tDiffuse;
+  uniform sampler2D tBloom;
+  uniform float uBloom;
   uniform vec3 uPalette[${PALETTE.length}];
   varying vec2 vUv;
 
@@ -37,6 +72,7 @@ const frag = /* glsl */ `
 
   void main() {
     vec3 c = texture2D(tDiffuse, vUv).rgb;
+    c += texture2D(tBloom, vUv).rgb * uBloom; // a luz floresce ANTES da paleta
     vec2 px = gl_FragCoord.xy;
     float dither = Bayer2(0.5 * px) * 0.25 + Bayer2(px);
     c += (dither - 0.5) * 0.07; // perturbação pré-quantização
@@ -53,10 +89,11 @@ const frag = /* glsl */ `
   }
 `;
 
-const vert = /* glsl */ `
-  varying vec2 vUv;
-  void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
-`;
+function quadScene(material) {
+  const scene = new THREE.Scene();
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+  return scene;
+}
 
 export class PixelPipeline {
   constructor(canvas) {
@@ -68,40 +105,78 @@ export class PixelPipeline {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.1;
 
+    const rt = (w, h) => {
+      const t = new THREE.WebGLRenderTarget(w, h, {
+        minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false,
+      });
+      t.texture.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    };
     this.target = new THREE.WebGLRenderTarget(PIXEL_W, PIXEL_H, {
       minFilter: THREE.NearestFilter,
       magFilter: THREE.NearestFilter,
       depthBuffer: true,
     });
     this.target.texture.colorSpace = THREE.SRGBColorSpace;
+    const BW = PIXEL_W / 2, BH = PIXEL_H / 2;
+    this.brightRT = rt(BW, BH);
+    this.blurRT = rt(BW, BH);
 
     const palette = PALETTE.map((hex) => {
       const c = new THREE.Color(hex);
       return new THREE.Vector3(c.r, c.g, c.b);
     });
 
-    this.postScene = new THREE.Scene();
     this.postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    this.postMaterial = new THREE.ShaderMaterial({
-      uniforms: { tDiffuse: { value: this.target.texture }, uPalette: { value: palette } },
-      vertexShader: vert,
-      fragmentShader: frag,
-      depthTest: false,
-      depthWrite: false,
+    this.brightMat = new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: this.target.texture } },
+      vertexShader: vert, fragmentShader: brightFrag, depthTest: false, depthWrite: false,
     });
-    this.postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.postMaterial));
+    this.blurMat = new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, uDir: { value: new THREE.Vector2() } },
+      vertexShader: vert, fragmentShader: blurFrag, depthTest: false, depthWrite: false,
+    });
+    this.quantMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse: { value: this.target.texture },
+        tBloom: { value: this.brightRT.texture },
+        uBloom: { value: 1.25 },
+        uPalette: { value: palette },
+      },
+      vertexShader: vert, fragmentShader: quantFrag, depthTest: false, depthWrite: false,
+    });
+    this.brightScene = quadScene(this.brightMat);
+    this.blurScene = quadScene(this.blurMat);
+    this.quantScene = quadScene(this.quantMat);
     this.enabled = true; // P liga/desliga (debug/comparação)
+
+    this._bw = BW; this._bh = BH;
   }
 
   render(scene, camera) {
+    const r = this.renderer;
     if (!this.enabled) {
-      this.renderer.setRenderTarget(null);
-      this.renderer.render(scene, camera);
+      r.setRenderTarget(null);
+      r.render(scene, camera);
       return;
     }
-    this.renderer.setRenderTarget(this.target);
-    this.renderer.render(scene, camera);
-    this.renderer.setRenderTarget(null);
-    this.renderer.render(this.postScene, this.postCamera);
+    // 1. cena em 480×270
+    r.setRenderTarget(this.target);
+    r.render(scene, camera);
+    // 2. bright-pass em meia resolução
+    r.setRenderTarget(this.brightRT);
+    r.render(this.brightScene, this.postCamera);
+    // 3. blur H → blurRT, blur V → brightRT (vira o tBloom final)
+    this.blurMat.uniforms.tDiffuse.value = this.brightRT.texture;
+    this.blurMat.uniforms.uDir.value.set(1 / this._bw, 0);
+    r.setRenderTarget(this.blurRT);
+    r.render(this.blurScene, this.postCamera);
+    this.blurMat.uniforms.tDiffuse.value = this.blurRT.texture;
+    this.blurMat.uniforms.uDir.value.set(0, 1 / this._bh);
+    r.setRenderTarget(this.brightRT);
+    r.render(this.blurScene, this.postCamera);
+    // 4. composição + paleta
+    r.setRenderTarget(null);
+    r.render(this.quantScene, this.postCamera);
   }
 }
