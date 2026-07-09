@@ -7,3 +7,14 @@ export const ART = {
   rio: `${CDN}/hf_20260613_013442_f02a91e5-a012-4537-9b1d-bb308798c534.png`,       // fase 8
   mirmecia: `${CDN}/hf_20260613_013445_a923f0f0-eceb-4240-9d77-3d84fb8dbda4.jpeg`, // fase 10
 };
+
+// malhas 3D dos heróis geradas no Higgsfield (image_to_3d, rig+anim).
+// Vazio = usa o herói procedural. Preenchido conforme cada GLB fica pronto.
+export const HERO_GLB = {
+  1: 'https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/a47b8c53-8cdd-4cb9-8a25-964a90becaf4.glb', // Tarso
+  2: '', // Brio
+  3: '', // Tino
+  4: '', // Garra
+  5: '', // Ávio
+};
+

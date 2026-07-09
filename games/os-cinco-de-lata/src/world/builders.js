@@ -2,6 +2,7 @@
 // Tudo em primitivas low-poly — a pixelização (core/pixel.js) faz o estilo.
 
 import * as THREE from 'three';
+import { upgradeHeroToGLB } from './heroes3d.js';
 
 // ---------------------------------------------------------------- materiais
 export const MAT = {
@@ -331,6 +332,7 @@ export function makeHero(member) {
   }
 
   g.scale.setScalar(member.scale);
+  upgradeHeroToGLB(g, member); // troca pela malha 3D se houver GLB registrado
   return g;
 }
 
@@ -340,6 +342,7 @@ export function animateHeroes(scene, dt) {
   if (dt <= 0) return;
   const t = performance.now() * 0.001;
   scene.traverse((obj) => {
+    if (obj.userData.mixer) obj.userData.mixer.update(dt); // heróis 3D (GLB rigado)
     const L = obj.userData.limbs;
     if (!L) return;
     const last = obj.userData.lastPos || (obj.userData.lastPos = obj.position.clone());
