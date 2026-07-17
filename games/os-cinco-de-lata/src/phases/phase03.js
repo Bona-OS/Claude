@@ -4,7 +4,7 @@
 
 import * as THREE from 'three';
 import { GamePhase, Walker, FollowCam, Hearts, handleParty, dist2d } from './framework.js';
-import { caveLights, colorMat, makeAnt, makePetalMound, makeGoal } from '../world/builders.js';
+import { caveLights, colorMat, makeAnt, makePetalMound, makeGoal, groundTexture, scatterDetail } from '../world/builders.js';
 import { Crate, stompCheck, SpinAttack, Checkpoint, Collectibles } from '../world/crash.js';
 
 const AREA = 46;
@@ -23,10 +23,15 @@ export class Phase03 extends GamePhase {
     this.lantern = new THREE.PointLight(0xf0b46a, 60, 26);
     scene.add(this.lantern);
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(AREA * 2.4, AREA * 2.4), colorMat(0x56401e, { roughness: 1 }));
+    const floorTex = groundTexture(0x6b4a24, { variant: 'rock' });
+    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+    floorTex.repeat.set(6, 6);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(AREA * 2.4, AREA * 2.4), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 1 }));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
+    // pedras espalhadas pela caverna (densidade — tira o vazio)
+    scatterDetail(scene, { count: 40, center: [0, 0, 0], area: [AREA * 1.8, AREA * 1.8], corridor: 3, palette: [0x8a5a2f, 0x6b4a24, 0x56575e] });
 
     // colunas de âmbar que iluminam (e dão cobertura)
     for (let i = 0; i < 10; i++) {

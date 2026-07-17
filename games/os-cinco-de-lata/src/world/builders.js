@@ -92,7 +92,11 @@ export function sunsetLights(scene, { fogColor = 0xd98a4f, fogNear = 40, fogFar 
   sun.shadow.camera.top = 60; sun.shadow.camera.bottom = -60;
   sun.shadow.camera.far = 160;
   scene.add(sun, sun.target);
-  scene.add(new THREE.HemisphereLight(0xf5c890, 0x3a2410, 0.55));
+  // rim light frio por trás: descola silhuetas do fundo (tira o "chapado")
+  const rim = new THREE.DirectionalLight(0x9db8ff, 0.7);
+  rim.position.set(28, 16, -34);
+  scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0xf5c890, 0x2e5419, 0.7));
   return sun;
 }
 
@@ -101,12 +105,16 @@ export function caveLights(scene, { fogColor = 0x2c1d11, amberGlow = true } = {}
   scene.environmentIntensity = 0.3; // reflexo discreto: lata não vira bola de Natal no escuro
   makeMotes(scene, { color: 0xe8945a, count: 90, rise: 0.9, size: 0.35, box: [60, 18, 140], center: [0, 6, -50] }); // brasas subindo
   scene.background = new THREE.Color(fogColor);
-  scene.fog = new THREE.Fog(fogColor, 18, 90);
-  const main = new THREE.DirectionalLight(0xe8945a, 2.0);
+  scene.fog = new THREE.Fog(fogColor, 24, 120); // menos fog esmagador = mais legível
+  const main = new THREE.DirectionalLight(0xf0a868, 2.3);
   main.position.set(10, 30, 10);
   main.castShadow = true;
   scene.add(main, main.target);
-  scene.add(new THREE.HemisphereLight(amberGlow ? 0xd9863f : 0x69a0f0, 0x3a2410, 1.25));
+  // preenchimento frio do lado oposto: dá forma e legibilidade sem clarear demais
+  const fill = new THREE.DirectionalLight(0x6a86c8, 0.5);
+  fill.position.set(-16, 12, -20);
+  scene.add(fill);
+  scene.add(new THREE.HemisphereLight(amberGlow ? 0xe89a55 : 0x8fb0f5, 0x3a2410, 1.5));
   return main;
 }
 
@@ -182,8 +190,11 @@ export function makeGrassField(scene, { count = 300, innerGap = 8, spread = 26, 
   };
 }
 
-export function makeGround(scene, { color = 0x24350f, y = -15, size = 500, z = -120 } = {}) {
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(size, size), colorMat(color, { roughness: 1 }));
+export function makeGround(scene, { color = 0x24350f, y = -15, size = 500, z = -120, variant = 'dirt' } = {}) {
+  const tex = groundTexture(color, { variant });
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(size / 26, size / 26);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ map: tex, roughness: 1 }));
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(0, y, z);
   ground.receiveShadow = true;
@@ -199,6 +210,77 @@ export function canvasTexture(w, h, draw) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
+}
+
+// textura de chão procedural: mata o "plano de cor chapada" (cara Neo Geo).
+// Deriva tons da cor-base + manchas grandes + speckle fino + detalhe por
+// variante ('grass'|'dirt'|'rock'|'sand'). Tileável.
+export function groundTexture(baseHex, { variant = 'dirt' } = {}) {
+  const base = new THREE.Color(baseHex);
+  const hx = (c) => '#' + c.getHexString();
+  const light = hx(base.clone().offsetHSL(0, -0.03, 0.09));
+  const dark = hx(base.clone().offsetHSL(0, 0.03, -0.09));
+  const spec = hx(base.clone().offsetHSL(0.03, 0.05, 0.16));
+  return canvasTexture(128, 128, (g, w, h) => {
+    g.fillStyle = hx(base); g.fillRect(0, 0, w, h);
+    // manchas grandes de tom (dão volume ao chão sob a pixelização)
+    for (let i = 0; i < 30; i++) {
+      g.globalAlpha = 0.22;
+      g.fillStyle = Math.random() < 0.5 ? light : dark;
+      g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 7 + Math.random() * 20, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
+    // speckle fino (grão)
+    const n = Math.floor(w * h * 0.05);
+    for (let i = 0; i < n; i++) {
+      g.fillStyle = Math.random() < 0.5 ? spec : dark;
+      g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    }
+    if (variant === 'grass') {
+      // tufos curtos
+      g.strokeStyle = light; g.lineWidth = 1;
+      for (let i = 0; i < 260; i++) {
+        g.globalAlpha = 0.4 + Math.random() * 0.4;
+        const x = Math.random() * w, y = Math.random() * h;
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + (Math.random() - 0.5) * 3, y - 2 - Math.random() * 4); g.stroke();
+      }
+      g.globalAlpha = 1;
+    } else if (variant === 'rock') {
+      // rachaduras
+      g.strokeStyle = dark; g.lineWidth = 1; g.globalAlpha = 0.5;
+      for (let i = 0; i < 10; i++) {
+        g.beginPath(); let x = Math.random() * w, y = Math.random() * h; g.moveTo(x, y);
+        for (let s = 0; s < 4; s++) { x += (Math.random() - 0.5) * 20; y += (Math.random() - 0.5) * 20; g.lineTo(x, y); }
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+    }
+  });
+}
+
+// espalha detalhe de meio-chão (tufos/pedras/flores) numa área, evitando o
+// corredor central — densidade barata que tira a sensação de "vazio".
+export function scatterDetail(scene, { count = 60, center = [0, 0, -40], area = [60, 120], corridor = 6, baseY = 0, palette = [0x3d6b23, 0x4f7d2a, 0x6fa03a] } = {}) {
+  const tuft = new THREE.ConeGeometry(0.5, 1.4, 4);
+  const pebble = new THREE.DodecahedronGeometry(0.4);
+  const group = new THREE.Group();
+  for (let i = 0; i < count; i++) {
+    const x = center[0] + (Math.random() - 0.5) * area[0];
+    if (Math.abs(x - center[0]) < corridor) continue; // não polui o caminho
+    const z = center[2] + (Math.random() - 0.5) * area[1];
+    const rock = Math.random() < 0.35;
+    const mesh = new THREE.Mesh(
+      rock ? pebble : tuft,
+      colorMat(rock ? 0x56575e : palette[i % palette.length], { flatShading: true, roughness: 0.9 })
+    );
+    mesh.position.set(x, baseY + (rock ? 0.1 : 0.5), z);
+    mesh.rotation.y = Math.random() * Math.PI;
+    mesh.scale.setScalar(0.5 + Math.random() * (rock ? 0.9 : 1.4));
+    mesh.castShadow = true;
+    group.add(mesh);
+  }
+  scene.add(group);
+  return group;
 }
 
 export function mirmeciaSilhouette() {
