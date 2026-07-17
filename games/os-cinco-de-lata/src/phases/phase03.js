@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { GamePhase, Walker, FollowCam, Hearts, handleParty, dist2d } from './framework.js';
 import { caveLights, colorMat, makeAnt, makePetalMound, makeGoal } from '../world/builders.js';
+import { Crate, stompCheck, SpinAttack, Checkpoint, Collectibles } from '../world/crash.js';
 
 const AREA = 46;
 
@@ -65,6 +66,7 @@ export class Phase03 extends GamePhase {
     for (let i = 0; i < 4; i++) {
       const ant = makeAnt({ color: 0x2c1d11 });
       ant.scale.setScalar(1.6);
+      ant.userData.stompHeight = 1.9; // p/ stompCheck: altura aproximada do topo
       const cone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({ color: 0xf0b46a, transparent: true, opacity: 0.12, side: THREE.DoubleSide }));
       cone.position.y = 1;
       ant.add(cone);
@@ -81,6 +83,20 @@ export class Phase03 extends GamePhase {
     this.exit = makeGoal(scene, { z: -AREA - 4, bannerColor: 0xf0b46a });
     this.exit.position.x = 0;
 
+    // --- demonstração dos sistemas de crash.js (aditivo, não mexe na vitória) ---
+    // coletáveis liberados pelas caixas normais (2 caixas normais = total fixo)
+    this.collectibles = new Collectibles(ctx, { goal: 2 });
+    this.crates = [
+      new Crate(scene, new THREE.Vector3(-16, 0.75, 18), { type: 'normal', collectibles: this.collectibles }),
+      new Crate(scene, new THREE.Vector3(14, 0.75, -6), { type: 'normal', collectibles: this.collectibles }),
+      new Crate(scene, new THREE.Vector3(-10, 0.75, -18), { type: 'bounce' }),
+      new Crate(scene, new THREE.Vector3(20, 0.75, 22), { type: 'iron' }),
+    ];
+    // checkpoint no meio do caminho (marco de passagem — ver nota no update())
+    this.checkpoint = new Checkpoint(scene, new THREE.Vector3(-18, 0, -4));
+    // giro de ataque do líder: tecla Q, quebra caixas de ferro e afasta sentinelas
+    this.spin = new SpinAttack(ctx);
+
     const leaderMesh = ctx.party.spawn(scene, new THREE.Vector3(0, 0, AREA - 4));
     this.walker = new Walker(ctx, leaderMesh, {
       speed: 10,
@@ -93,12 +109,13 @@ export class Phase03 extends GamePhase {
     this.cam.snap(leaderMesh.position);
     this.hearts = new Hearts(ctx);
     this.alarm = 0;
+    this._lastCollectibles = 0;
     this._hud(ctx);
     ctx.hud.say('Ávio: — Pisa leve. Aqui embaixo até as pétalas escutam.', { time: 4500 });
   }
 
   _hud(ctx) {
-    ctx.hud.setStatus(`PETALAS ${this.collected}/3   ${this.hearts.display}`);
+    ctx.hud.setStatus(`PETALAS ${this.collected}/3   ${this.collectibles.hud()}   ${this.hearts.display}`);
   }
 
   _seen(ctx, guard) {
@@ -142,9 +159,49 @@ export class Phase03 extends GamePhase {
       }
     }
 
+    // caixas: caem quebrando (normal/bump), saltam (bounce) ou resistem (iron)
+    for (const crate of this.crates) {
+      if (crate.broken) continue;
+      if (dist2d(p, crate.position) > crate.radius + 0.9) continue;
+      if (crate.type === 'bounce') {
+        if (this.walker.velY <= 0) {
+          this.walker.velY = 15;
+          this.walker.onGround = false;
+          ctx.audio.sfx('jump');
+          ctx.juice.shake(0.12, 0.1);
+        }
+        continue;
+      }
+      crate.hitBy(ctx, this.walker.velY < -2 ? 'stomp' : 'bump');
+    }
+
+    // giro de ataque do líder (tecla Q) — quebra caixas de ferro, afasta sentinelas
+    if (ctx.input.justPressed('KeyQ')) this.spin.trigger();
+    this.spin.update(dt, p, {
+      crates: this.crates,
+      enemies: this.guards.filter((g) => !g.mesh.userData.dead).map((g) => g.mesh),
+      radius: 2.5,
+    });
+
+    // pular em cima de uma sentinela a nocauteia (some da patrulha)
+    stompCheck(ctx, this.walker, this.guards.map((g) => g.mesh), {
+      onStomp: (mesh) => {
+        mesh.visible = false;
+        ctx.hud.say('Sentinela nocauteada — uma a menos de olho na gente!', { time: 1800 });
+      },
+    });
+
+    this.checkpoint.check(ctx, p);
+    this.collectibles.update(dt, p);
+    if (this.collectibles.count !== this._lastCollectibles) {
+      this._lastCollectibles = this.collectibles.count;
+      this._hud(ctx);
+    }
+
     // sentinelas
     let spotted = false;
     for (const guard of this.guards) {
+      if (guard.mesh.userData.dead) continue; // nocauteada por stomp — não patrulha nem vê
       guard.a += guard.speed * dt;
       const gx = guard.cx + Math.cos(guard.a) * guard.r;
       const gz = guard.cz + Math.sin(guard.a) * guard.r;
