@@ -26,6 +26,9 @@ export class GamePhase {
 
 // ------------------------------------------------------- controlador andante
 // Movimento WASD + pulo + animação, com stats do líder do grupo.
+const COYOTE_TIME = 0.1;  // segundos após sair do chão em que ainda dá pra pular
+const JUMP_BUFFER = 0.12; // segundos que um pulo pedido antes de aterrissar fica "guardado"
+
 export class Walker {
   constructor(ctx, mesh, {
     speed = 13, sprintMult = 1.6, jump = 9, gravity = 28,
@@ -39,6 +42,9 @@ export class Walker {
     this.onGround = true;
     this.facing = Math.PI;
     this.frozen = false;
+    this.coyote = 0;       // tempo restante de coyote-time
+    this.jumpBuffer = 0;   // tempo restante de jump buffer
+    this.cutJump = false;  // já cortou a subida deste pulo (pulo variável)?
   }
 
   update(dt) {
@@ -60,17 +66,35 @@ export class Walker {
     while (dr < -Math.PI) dr += Math.PI * 2;
     this.mesh.rotation.y += dr * Math.min(1, dt * 12);
 
-    if (input.justPressed('Space') && this.onGround) {
+    // coyote-time: no chão, o crédito de pulo fica sempre cheio; ao sair,
+    // decai — permitindo pular um pouco depois de deixar a borda
+    this.coyote = this.onGround ? COYOTE_TIME : Math.max(0, this.coyote - dt);
+    // jump buffer: guarda um pedido de pulo feito pouco antes de aterrissar
+    if (input.justPressed('Space')) this.jumpBuffer = JUMP_BUFFER;
+    else this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
+
+    if (this.jumpBuffer > 0 && this.coyote > 0) {
       this.velY = o.jump * leader.jumpMult;
       this.onGround = false;
+      this.coyote = 0;
+      this.jumpBuffer = 0;
+      this.cutJump = false;
       this.ctx.audio.sfx('jump');
     }
+
+    // pulo variável: soltar Espaço durante a subida encurta o pulo (uma vez)
+    if (!this.onGround && this.velY > 0 && !this.cutJump && !input.down('Space')) {
+      this.velY *= 0.5;
+      this.cutJump = true;
+    }
+
     this.velY -= o.gravity * dt;
     this.mesh.position.y += this.velY * dt;
     if (this.mesh.position.y <= o.groundY) {
       this.mesh.position.y = o.groundY;
       this.velY = 0;
       this.onGround = true;
+      this.cutJump = false;
     }
     if (this.clamp) this.clamp(this.mesh.position);
 
@@ -81,17 +105,37 @@ export class Walker {
 
 // ------------------------------------------------------- câmera de seguir
 export class FollowCam {
-  constructor(camera, { height = 5.2, back = 10.5, lookAhead = -6, stiffness = 4 } = {}) {
+  // `lookAhead` (existente) é o offset fixo de mira em Z. `velocityLookAhead`
+  // (novo, default 0 = comportamento idêntico ao antigo) é quanto a câmera
+  // antecipa na direção do movimento do alvo, derivado da velocidade e
+  // amortecido — nome diferente pra não colidir com o parâmetro já existente.
+  constructor(camera, { height = 5.2, back = 10.5, lookAhead = -6, stiffness = 4, velocityLookAhead = 0 } = {}) {
     this.camera = camera;
-    this.o = { height, back, lookAhead, stiffness };
+    this.o = { height, back, lookAhead, stiffness, velocityLookAhead };
     this._target = new THREE.Vector3();
+    this._prevPos = null;
+    this._anticip = new THREE.Vector3(); // deslocamento de antecipação (amortecido)
   }
 
   update(targetPos, dt, sun = null) {
     const o = this.o;
-    this._target.set(targetPos.x * 0.6, targetPos.y + o.height, targetPos.z + o.back);
+    if (o.velocityLookAhead > 0) {
+      if (!this._prevPos) this._prevPos = targetPos.clone();
+      const vx = (targetPos.x - this._prevPos.x) / Math.max(dt, 1e-4);
+      const vz = (targetPos.z - this._prevPos.z) / Math.max(dt, 1e-4);
+      const wantX = vx * o.velocityLookAhead;
+      const wantZ = vz * o.velocityLookAhead;
+      const k = Math.min(1, dt * 3);
+      this._anticip.x += (wantX - this._anticip.x) * k;
+      this._anticip.z += (wantZ - this._anticip.z) * k;
+      this._prevPos.copy(targetPos);
+    }
+    const aheadX = targetPos.x + this._anticip.x;
+    const aheadZ = targetPos.z + this._anticip.z;
+
+    this._target.set(aheadX * 0.6, targetPos.y + o.height, aheadZ + o.back);
     this.camera.position.lerp(this._target, Math.min(1, dt * o.stiffness));
-    this.camera.lookAt(targetPos.x * 0.8, targetPos.y + 1.6, targetPos.z + o.lookAhead);
+    this.camera.lookAt(aheadX * 0.8, targetPos.y + 1.6, aheadZ + o.lookAhead);
     if (sun) {
       sun.position.set(targetPos.x - 30, 35, targetPos.z + 20);
       sun.target.position.copy(targetPos);
@@ -100,6 +144,8 @@ export class FollowCam {
 
   snap(targetPos) {
     this.camera.position.set(targetPos.x * 0.6, targetPos.y + this.o.height, targetPos.z + this.o.back);
+    this._prevPos = targetPos.clone();
+    this._anticip.set(0, 0, 0);
   }
 }
 

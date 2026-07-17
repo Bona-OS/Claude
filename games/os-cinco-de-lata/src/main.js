@@ -11,6 +11,7 @@ import { HUD } from './core/hud.js';
 import { AudioEngine } from './core/audio.js';
 import { PartyManager, PARTY_MEMBERS } from './core/party.js';
 import { Save } from './core/save.js';
+import { Juice } from './core/juice.js';
 import { WorldMap } from './world/worldmap.js';
 import { Phase01 } from './phases/phase01.js';
 import { Phase02 } from './phases/phase02.js';
@@ -43,6 +44,7 @@ class Game {
     this.audio = new AudioEngine();
     this.party = new PartyManager();
     this.save = new Save();
+    this.juice = new Juice(); // screen-shake, hit-stop, flash e partículas de impacto
     this.pipeline = new PixelPipeline(document.getElementById('game'));
     const pmrem = new THREE.PMREMGenerator(this.pipeline.renderer);
     setEnvironment(pmrem.fromScene(new RoomEnvironment(), 0.04).texture);
@@ -150,7 +152,9 @@ class Game {
       }
       if (this.input.justPressed('Escape')) this.gotoWorldmap();
     } else if (this.state === 'PHASE') {
-      this.currentPhase.update(this, dt);
+      // hit-stop: se houver congelamento pendente, a fase pula este frame
+      // (mas juice.update abaixo continua rodando shake/flash/partículas)
+      if (!this.juice.consumeHitStop(dt)) this.currentPhase.update(this, dt);
       if (this.input.justPressed('Escape')) this.gotoWorldmap();
     } else if (this.state === 'RESULT') {
       if (this.input.justPressed('Enter')) this.gotoWorldmap();
@@ -158,7 +162,17 @@ class Game {
     }
 
     if (this.scene) animateHeroes(this.scene, dt);
+    this.juice.update(dt);
+
+    // screen-shake: soma o deslocamento na câmera só para este render e
+    // desfaz em seguida (a câmera é reposicionada a cada frame pelas fases)
+    const shake = this.juice.getShakeOffset();
+    const baseX = this.camera.position.x, baseY = this.camera.position.y;
+    this.camera.position.x += shake.x;
+    this.camera.position.y += shake.y;
     this.pipeline.render(this.scene, this.camera);
+    this.camera.position.x = baseX;
+    this.camera.position.y = baseY;
   }
 }
 
