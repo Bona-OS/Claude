@@ -91,6 +91,10 @@ export class Walker {
     this.velY -= o.gravity * dt;
     this.mesh.position.y += this.velY * dt;
     if (this.mesh.position.y <= o.groundY) {
+      // tranco de aterrissagem proporcional à queda (só se veio de um baque)
+      if (!this.onGround && this.velY < -8 && this.ctx.juice) {
+        this.ctx.juice.shake(Math.min(0.35, -this.velY * 0.02), 0.18);
+      }
       this.mesh.position.y = o.groundY;
       this.velY = 0;
       this.onGround = true;
@@ -184,6 +188,13 @@ export class Hearts {
     this.invuln = 2;
     this.ctx.audio.sfx(sfx);
     this.ctx.hud.say(why, { danger: true });
+    // feedback compartilhado: baque de dano sentido em toda fase
+    if (this.ctx.juice) {
+      const morto = this.n <= 0;
+      this.ctx.juice.shake(morto ? 0.85 : 0.5, 0.35);
+      this.ctx.juice.flash('#c0392b', morto ? 0.55 : 0.32, 0.2);
+      this.ctx.juice.hitStop(morto ? 0.12 : 0.05);
+    }
     return this.n <= 0; // true = morreu
   }
 

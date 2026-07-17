@@ -115,6 +115,8 @@ class Game {
     this.save.complete(this.currentPhaseId, score);
     this.audio.playTheme(null);
     this.audio.fanfare();
+    this.juice.flash('#f0b46a', 0.4, 0.4); // clarão dourado de vitória
+    this.juice.shake(0.35, 0.3);
     const last = this.currentPhaseId === 10;
     this.hud.result(
       last ? '✦ A CASA AO LADO ✦' : 'VITÓRIA',
@@ -130,6 +132,8 @@ class Game {
     this.resultWon = false;
     this.audio.playTheme(null);
     this.audio.lament();
+    this.juice.flash('#5e2715', 0.5, 0.35); // tranco escuro de derrota
+    this.juice.shake(0.7, 0.4);
     this.hud.result('DERROTA', text, 'R · tentar de novo    ENTER · mapa');
   }
 
