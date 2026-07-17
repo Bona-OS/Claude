@@ -7,7 +7,7 @@ import { GamePhase, Walker, FollowCam, handleParty, dist2d } from './framework.j
 import { ART } from '../world/art.js';
 import {
   horizonArt,
-  sunsetLights, makeGrassField, makeGround, makeGecko, animateGecko,
+  sunsetLights, dayLights, makeGrassField, makeGround, makeGecko, animateGecko,
   makeRock, colorMat, makeGoal,
 } from '../world/builders.js';
 
@@ -19,9 +19,9 @@ export class Phase04 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    this.sun = sunsetLights(scene, { fogNear: 30, fogFar: 120 });
+    this.sun = dayLights(scene, { fogNear: 40, fogFar: 300 });
     makeGround(scene, { y: 0, z: -40, color: 0x2e5419 });
-    horizonArt(scene, ART.floresta, { w: 300, h: 105, position: [0, 26, -118], sky: '#8a3b22', ground: '#24350f' });
+    horizonArt(scene, ART.floresta, { w: 300, h: 105, position: [0, 26, -118], sky: '#6f9ac8', ground: '#3a5a24' });
     this.grass = makeGrassField(scene, { count: 260, innerGap: 26, spread: 34, zMin: -110, zMax: 30, baseY: 0 });
 
     // Trovão preso sob a raiz

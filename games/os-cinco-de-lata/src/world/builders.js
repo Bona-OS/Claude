@@ -100,6 +100,43 @@ export function sunsetLights(scene, { fogColor = 0xd98a4f, fogNear = 40, fogFar 
   return sun;
 }
 
+// céu em gradiente (background 2D — sempre atrás, sem clipping nem fog)
+export function skyGradient(top, mid, bottom) {
+  const hx = (c) => '#' + new THREE.Color(c).getHexString();
+  return canvasTexture(8, 256, (g, w, h) => {
+    const grad = g.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, hx(top));
+    grad.addColorStop(0.5, hx(mid));
+    grad.addColorStop(1, hx(bottom));
+    g.fillStyle = grad; g.fillRect(0, 0, w, h);
+  });
+}
+
+// LUZ DE DIA NATURAL (rumo Terra-média): céu azul, sol dourado, névoa
+// atmosférica na distância. Substitui o pôr-do-sol vermelho perpétuo nas
+// fases abertas — o mundo fica gigante, vivo e convidativo.
+export function dayLights(scene, { fogColor = 0xcfe0f2, fogNear = 60, fogFar = 420, sun: sunHex = 0xffe8b0, skyTop = 0x4d86c8, skyBottom = 0xe6ddc4 } = {}) {
+  if (ENV) scene.environment = ENV;
+  scene.environmentIntensity = 0.9;
+  scene.background = skyGradient(skyTop, 0x9ec4e8, skyBottom);
+  scene.fog = new THREE.Fog(fogColor, fogNear, fogFar);
+  const sun = new THREE.DirectionalLight(sunHex, 2.7);
+  sun.position.set(-40, 65, 30);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -60; sun.shadow.camera.right = 60;
+  sun.shadow.camera.top = 80; sun.shadow.camera.bottom = -80;
+  sun.shadow.camera.far = 240;
+  scene.add(sun, sun.target);
+  scene.add(new THREE.HemisphereLight(0xaed0f5, 0x40602c, 1.15)); // céu azul / chão verde
+  const rim = new THREE.DirectionalLight(0xbcd0ff, 0.5);
+  rim.position.set(40, 22, -42);
+  scene.add(rim);
+  makeClouds(scene, skyTop);
+  makeMotes(scene, { color: 0xf2ead0, count: 120 });
+  return sun;
+}
+
 export function caveLights(scene, { fogColor = 0x2c1d11, amberGlow = true } = {}) {
   if (ENV) scene.environment = ENV;
   scene.environmentIntensity = 0.3; // reflexo discreto: lata não vira bola de Natal no escuro
@@ -314,10 +351,10 @@ export function makeBackdrop(scene, { texture, url, w = 150, h = 75, position = 
 }
 
 // horizonte pintado (arte do Higgsfield) com fallback em gradiente de céu
-export function horizonArt(scene, url, { w = 320, h = 110, position = [0, 30, -300], sky = '#c2602f', ground = '#3a2410' } = {}) {
+export function horizonArt(scene, url, { w = 320, h = 110, position = [0, 30, -300], sky = '#7ba6d8', ground = '#cfe0cf' } = {}) {
   const fallback = canvasTexture(256, 96, (g, cw, ch) => {
     const grad = g.createLinearGradient(0, 0, 0, ch);
-    grad.addColorStop(0, '#e8945a'); grad.addColorStop(0.55, sky); grad.addColorStop(1, ground);
+    grad.addColorStop(0, '#4d86c8'); grad.addColorStop(0.5, sky); grad.addColorStop(1, ground);
     g.fillStyle = grad; g.fillRect(0, 0, cw, ch);
   });
   return makeBackdrop(scene, { texture: fallback, url, w, h, position });

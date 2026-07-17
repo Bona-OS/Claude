@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { GamePhase, FollowCam } from './framework.js';
 import { ART } from '../world/art.js';
 import {
-  horizonArt,
+  horizonArt, dayLights,
   sunsetLights, makeGround, makeGrassField, makeGecko, animateGecko,
   makeRing, makeRock,
 } from '../world/builders.js';
@@ -24,7 +24,7 @@ export class Phase05 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    this.sun = sunsetLights(scene, { fogNear: 35, fogFar: 130 });
+    this.sun = dayLights(scene, { fogNear: 50, fogFar: 420 });
     this.horizon = horizonArt(scene, ART.capim, { w: 420, h: 140, position: [0, 36, -LEN - 95] });
     makeGround(scene, { y: 0, z: -LEN / 2, size: 800, color: 0x2e5419 });
     this.grass = makeGrassField(scene, { count: 380, innerGap: HALF_W * 2 + 8, spread: 40, zMin: -LEN - 30, zMax: 30, baseY: 0 });

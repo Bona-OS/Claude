@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { GamePhase, Hearts } from './framework.js';
 import { ART } from '../world/art.js';
-import { horizonArt, sunsetLights, makeWater, makeBoat, colorMat, makeRock } from '../world/builders.js';
+import { horizonArt, sunsetLights, dayLights, makeWater, makeBoat, colorMat, makeRock } from '../world/builders.js';
 
 const LEN = 380;
 const HALF_W = 18;
@@ -18,8 +18,8 @@ export class Phase08 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    this.horizon = horizonArt(scene, ART.rio, { w: 460, h: 150, position: [0, 38, -LEN - 100], sky: '#d98a4f', ground: '#16203a' });
-    this.sun = sunsetLights(scene, { fogColor: 0xe8945a, fogNear: 45, fogFar: 160 });
+    this.horizon = horizonArt(scene, ART.rio, { w: 460, h: 150, position: [0, 38, -LEN - 100], sky: '#7ba6d8', ground: '#2f5f9a' });
+    this.sun = dayLights(scene, { fogColor: 0xbcd6ea, fogNear: 55, fogFar: 380 });
     this.water = makeWater(scene, { size: 700 });
 
     // margens

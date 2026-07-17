@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { GamePhase, Walker, FollowCam, Hearts, handleParty, dist2d } from './framework.js';
 import {
-  sunsetLights, makeBeam, makeGrassField, makeGround, makeBackdrop,
+  sunsetLights, dayLights, makeBeam, makeGrassField, makeGround, makeBackdrop,
   mirmeciaSilhouette, makeGoal, makeShard, makeBird, flapWings,
 } from '../world/builders.js';
 
@@ -20,7 +20,7 @@ export class Phase01 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    this.sun = sunsetLights(scene);
+    this.sun = dayLights(scene);
     const beamInfo = makeBeam(scene, { length: LEN, width: WIDTH });
     this.holes = beamInfo.holes;
     this.holeRadius = beamInfo.holeRadius;

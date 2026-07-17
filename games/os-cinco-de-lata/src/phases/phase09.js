@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { GamePhase, Walker, FollowCam, Hearts, handleParty, dist2d } from './framework.js';
 import { ART } from '../world/art.js';
-import { horizonArt, sunsetLights, makeGround, makeGrassField, makeWasp, colorMat } from '../world/builders.js';
+import { horizonArt, sunsetLights, dayLights, makeGround, makeGrassField, makeWasp, colorMat } from '../world/builders.js';
 
 const ARENA = 26;
 const WAVES = [4, 6, 8];
@@ -18,7 +18,7 @@ export class Phase09 extends GamePhase {
 
   build(ctx) {
     const scene = ctx.scene;
-    this.sun = sunsetLights(scene, { fogColor: 0xc2602f, fogNear: 30, fogFar: 110 });
+    this.sun = dayLights(scene, { fogNear: 45, fogFar: 300 });
     makeGround(scene, { y: 0, z: 0, color: 0x3d6b23 });
     horizonArt(scene, ART.capim, { w: 360, h: 120, position: [0, 30, -160] });
     this.grass = makeGrassField(scene, { count: 200, innerGap: ARENA * 2 + 10, spread: 26, zMin: -60, zMax: 60, baseY: 0 });
