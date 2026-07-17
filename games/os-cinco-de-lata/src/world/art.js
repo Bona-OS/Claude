@@ -12,9 +12,9 @@ export const ART = {
 // Vazio = usa o herói procedural. Preenchido conforme cada GLB fica pronto.
 export const HERO_GLB = {
   1: 'https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/a47b8c53-8cdd-4cb9-8a25-964a90becaf4.glb', // Tarso
-  2: '', // Brio
-  3: '', // Tino
-  4: '', // Garra
-  5: '', // Ávio
+  2: 'https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/437d911b-68ee-4449-85e5-6db7f438d0ed.glb', // Brio
+  3: 'https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/ee6cdea4-c06a-4bcf-933b-1f3e82d385c0.glb', // Tino
+  4: 'https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/4daf9426-a2c3-447f-804d-4eeab6225283.glb', // Garra
+  5: 'https://d3u0tzju9qaucj.cloudfront.net/7d051b5a-7bfe-49fe-a484-24e7b3a9458a/eee48acd-45f0-49a3-8f2c-38ab56a34d64.glb', // Ávio
 };
 
