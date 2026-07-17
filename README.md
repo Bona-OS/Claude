@@ -52,6 +52,12 @@ Veja [`.env.example`](.env.example). Em resumo: `GEMINI_API_KEY`, `SUPABASE_URL`
 `SUPABASE_SERVICE_ROLE_KEY`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
 `WHATSAPP_VERIFY_TOKEN`, `MP_ACCESS_TOKEN`, `PRICE_BRL`, `NEXT_PUBLIC_WHATSAPP_LINK`.
 
+## Ferramentas de dev (Claude Code)
+
+O repo configura automaticamente os plugins do time (Superpowers, Claude Mem, Caveman e
+Security Guidance) via `.claude/settings.json`. Catálogo completo — incluindo Context7 (MCP)
+e o "Top 10 AI Skills" opcional — em [`docs/PLUGINS.md`](docs/PLUGINS.md).
+
 ## Próximos passos
 
 Checklist de go-live e roadmap em [`docs/PLANO.md`](docs/PLANO.md).
