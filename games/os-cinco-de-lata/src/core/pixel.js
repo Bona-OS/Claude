@@ -5,26 +5,29 @@
 
 import * as THREE from 'three';
 
-export const PIXEL_W = 480;
-export const PIXEL_H = 270;
+export const PIXEL_W = 640;
+export const PIXEL_H = 360;
 
-// paleta FFV-like calibrada para o jogo: ferrugem, pôr do sol, capim,
-// prata da armadura, azuis de menu/água, acentos de pétala
+// paleta natural e harmônica (rumo "Terra-média"): verdes ricos de mata,
+// pedra/terra quentes, ouro de luz, azuis de céu e de distância atmosférica,
+// prata da armadura, acentos. Menos ferrugem chapada, mais cor de mundo vivo.
 const PALETTE = [
-  // sombras / terra
-  '#1a0e06', '#2c1d11', '#3a2410', '#4a2f1b',
-  // ferrugem
-  '#5e2715', '#6e2c16', '#8a3b22', '#a64b2a', '#c2602f',
-  // ouro / céu do entardecer
-  '#d9863f', '#e8945a', '#f0b46a', '#e9bc7e', '#f3e9d2',
-  // verdes do capim
-  '#24350f', '#2e5419', '#3d6b23', '#4f7d2a', '#6fa03a', '#9bc25e',
-  // pratas (papel-alumínio)
-  '#56575e', '#83858f', '#aeb0bb', '#dcdce6', '#f2f2fa',
-  // azuis (menu FFV / água / noite)
-  '#16203a', '#274b8a', '#3a6fd8', '#69a0f0', '#a8c8f8',
-  // acentos
-  '#c0392b', '#e07a9a',
+  // sombras profundas (frias, não pretas)
+  '#0d1410', '#141d18', '#20281f', '#2b3428',
+  // verdes de mata (base do mundo)
+  '#1b3a17', '#295022', '#3a6b2b', '#4f8a35', '#6aa844', '#8fc65e', '#b9e08a',
+  // terra / pedra quente
+  '#3a2c1a', '#5a4530', '#7a6142', '#a08258', '#c4a878', '#e2cfa2',
+  // ouro / luz do sol
+  '#b8862f', '#e0a94a', '#f2c96a', '#f8e6a8', '#fbf4d8',
+  // rocha fria / montanha na distância
+  '#4a5560', '#6b7784', '#94a1ae', '#c2ccd6',
+  // azuis de céu e névoa atmosférica (dá profundidade épica)
+  '#1c2f4a', '#2f5480', '#4d7db0', '#7ba6d8', '#aecdef', '#8296a8',
+  // prata da armadura
+  '#565962', '#84888f', '#b0b4bb', '#dee2ea',
+  // acentos vivos (pétala, perigo, água)
+  '#b8402c', '#e07a5a', '#2f8f6f', '#e07a9a',
 ];
 
 const vert = /* glsl */ `
@@ -64,6 +67,7 @@ const quantFrag = /* glsl */ `
   uniform sampler2D tDiffuse;
   uniform sampler2D tBloom;
   uniform float uBloom;
+  uniform float uPaletteMix; // 1 = paleta pura (crunch), <1 = suaviza (bleed do original)
   uniform vec3 uPalette[${PALETTE.length}];
   varying vec2 vUv;
 
@@ -73,19 +77,28 @@ const quantFrag = /* glsl */ `
   void main() {
     vec3 c = texture2D(tDiffuse, vUv).rgb;
     c += texture2D(tBloom, vUv).rgb * uBloom; // a luz floresce ANTES da paleta
+
+    // grade cinematográfico: sombra fria, luz quente, +contraste, +saturação
+    float lum = dot(c, vec3(0.299, 0.587, 0.114));
+    c = mix(vec3(lum), c, 1.14);          // satura
+    c = (c - 0.5) * 1.07 + 0.5;           // contraste
+    c += vec3(-0.02, 0.0, 0.04) * (1.0 - lum); // sombras puxam pro frio
+    c += vec3(0.05, 0.025, 0.0) * lum;    // luzes puxam pro quente/dourado
+    vec3 graded = clamp(c, 0.0, 1.0);
+
     vec2 px = gl_FragCoord.xy;
     float dither = Bayer2(0.5 * px) * 0.25 + Bayer2(px);
-    c += (dither - 0.5) * 0.07; // perturbação pré-quantização
+    vec3 cd = graded + (dither - 0.5) * 0.05; // dither mais suave
 
     float best = 1e9;
     vec3 bestC = uPalette[0];
     for (int i = 0; i < ${PALETTE.length}; i++) {
-      vec3 d = c - uPalette[i];
-      // distância ponderada pela percepção (verde pesa mais)
-      float dist = dot(d * vec3(0.6, 1.0, 0.45), d);
+      vec3 d = cd - uPalette[i];
+      float dist = dot(d * vec3(0.7, 1.0, 0.6), d);
       if (dist < best) { best = dist; bestC = uPalette[i]; }
     }
-    gl_FragColor = vec4(bestC, 1.0);
+    // suaviza o "snap" da paleta com um sangramento do original graduado
+    gl_FragColor = vec4(mix(graded, bestC, uPaletteMix), 1.0);
   }
 `;
 
@@ -141,6 +154,7 @@ export class PixelPipeline {
         tDiffuse: { value: this.target.texture },
         tBloom: { value: this.brightRT.texture },
         uBloom: { value: 1.25 },
+        uPaletteMix: { value: 0.72 }, // 72% paleta, 28% original = pixel rico, menos chapado
         uPalette: { value: palette },
       },
       vertexShader: vert, fragmentShader: quantFrag, depthTest: false, depthWrite: false,
