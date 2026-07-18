@@ -2,7 +2,8 @@
 // Caminho pontilhado, 10 nós; ←/→ anda entre nós liberados, Enter entra.
 
 import * as THREE from 'three';
-import { canvasTexture, colorMat, makeHero, sunsetLights } from './builders.js';
+import { canvasTexture, colorMat, makeHero, dayLights, horizonArt, groundTexture } from './builders.js';
+import { ART } from './art.js';
 import { PARTY_MEMBERS } from '../core/party.js';
 
 // posições dos 10 nós no plano do mapa (x, z) — serpenteando NO→SE
@@ -12,7 +13,7 @@ const NODES = [
 ];
 
 // arte do mapa gerada no Higgsfield (ver docs/PROMPTS.md); fallback procedural se offline
-export let WORLDMAP_ART_URL = 'https://d8j0ntlcm91z4.cloudfront.net/user_3Cs6n4P9VtDQBLcqUPlxk1nSd2p/hf_20260611_195856_f266e6a7-93a5-4799-96af-1b42a1958f2f.png';
+export let WORLDMAP_ART_URL = 'https://d8j0ntlcm91z4.cloudfront.net/user_3Cs6n4P9VtDQBLcqUPlxk1nSd2p/hf_20260718_135543_e6888cbf-cd42-4a41-8bbc-cf61a112aa97.png';
 export function setWorldmapArt(url) { WORLDMAP_ART_URL = url; }
 
 function paintMap() {
@@ -71,7 +72,9 @@ export class WorldMap {
     const ctx = this.ctx;
     this.scene = new THREE.Scene();
     const scene = this.scene;
-    sunsetLights(scene, { fogColor: 0xe8945a, fogNear: 200, fogFar: 400 });
+    dayLights(scene, { fogNear: 140, fogFar: 520 });
+    // vista pintada no horizonte: o mundo continua alem do mapa
+    horizonArt(scene, ART.capim, { w: 520, h: 170, position: [0, 40, -110] });
     // mapa
     const mapMat = new THREE.MeshStandardMaterial({ map: paintMap(), roughness: 0.9 });
     if (WORLDMAP_ART_URL) {
@@ -86,8 +89,11 @@ export class WorldMap {
     map.rotation.x = -Math.PI / 2;
     map.receiveShadow = true;
     scene.add(map);
-    // capim alto além da borda do mapa — sem "vazio laranja" nos nós extremos
-    const skirt = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), colorMat(0x2e5419, { roughness: 1 }));
+    // capim texturizado além da borda do mapa — o mundo continua
+    const skirtTex = groundTexture(0x2e5419, { variant: 'grass' });
+    skirtTex.wrapS = skirtTex.wrapT = THREE.RepeatWrapping;
+    skirtTex.repeat.set(26, 26);
+    const skirt = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), new THREE.MeshStandardMaterial({ map: skirtTex, roughness: 1 }));
     skirt.rotation.x = -Math.PI / 2;
     skirt.position.y = -0.15;
     scene.add(skirt);
@@ -175,8 +181,8 @@ export class WorldMap {
     }
     // câmera FFV: alta, inclinada, seguindo o token
     const cam = ctx.camera;
-    const goal = new THREE.Vector3(this.token.position.x * 0.7, 34, this.token.position.z + 30);
+    const goal = new THREE.Vector3(this.token.position.x * 0.7, 25, this.token.position.z + 27);
     cam.position.lerp(goal, Math.min(1, dt * 3));
-    cam.lookAt(this.token.position.x, 0, this.token.position.z - 4);
+    cam.lookAt(this.token.position.x, 2, this.token.position.z - 14);
   }
 }
