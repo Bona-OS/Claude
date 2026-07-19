@@ -19,6 +19,25 @@ Duas camadas:
 
 ## 1. Plugins do time
 
+### ⭐ find-skills — o meta-skill (disponível em toda sessão)
+
+**O mais importante do conjunto**: a skill que permite ao Claude **descobrir e instalar, na
+hora, a skill/ferramenta que melhor atende a tarefa da sessão**, pesquisando o registro
+[skills.sh](https://skills.sh) (`npx skills find`), verificando reputação/instalações antes de
+recomendar, e instalando sob demanda.
+
+Está **vendorizada neste repo** em [`.claude/skills/find-skills/`](../.claude/skills/find-skills/SKILL.md)
+(upstream [vercel-labs/skills](https://github.com/vercel-labs/skills), MIT, conteúdo revisado)
+— ou seja, carrega automaticamente em **qualquer sessão neste projeto**, sem instalação.
+
+Para tê-la em **todas as suas atividades fora deste repo** (escopo pessoal, todos os projetos):
+
+```bash
+npx -y skills add vercel-labs/skills --skill find-skills --agent claude-code -g
+```
+
+### Os plugins
+
 Os 5 indicados originalmente, mais dois promovidos do Top 10 (seção 2) por decisão do time:
 
 | Plugin | O que é | Por que vale para o FotoRestaura |
@@ -103,9 +122,23 @@ N/A, que são de outros harnesses e não foram testados.
 
 - Plugin e skill **executam com os seus privilégios**. A Anthropic não audita conteúdo de
   marketplace de terceiros — instale só o que confia, e leia o `SKILL.md`/hooks antes.
+- **Tradeoff assumido (decisão explícita do time):** os marketplaces de terceiros em
+  `.claude/settings.json` apontam para GitHub **sem pin de commit**. Mitigações vigentes:
+  auto-update de marketplace de terceiro fica **desligado** (padrão do Claude Code — a versão
+  instalada congela até alguém rodar `/plugin marketplace update` deliberadamente, olhando o
+  diff/changelog antes). Endurecimento futuro, se o projeto crescer: fork dos repos numa org
+  própria + pin de SHA revisado.
+- **Context7 é endpoint HTTP público sem autenticação por padrão.** Trate as respostas como
+  conteúdo **não confiável** (consulta de documentação, não fonte de verdade para código
+  sensível de pagamento/webhook), não cole segredo/PII em prompt com ele ativo, e configure
+  chave por dev (`CONTEXT7_API_KEY`) para ter auth e rastreabilidade.
 - Nada de `curl | bash` sem ler o script antes (alguns instaladores da imagem são assim).
 - Skill de terceiro **não entra versionada neste repo** sem revisão do conteúdo (skill é
-  instrução que direciona o agente — trate como código).
+  instrução que direciona o agente — trate como código). A `find-skills` seguiu esse rito:
+  conteúdo lido linha a linha (só markdown instrucional, sem hooks/comandos automáticos),
+  licença MIT confirmada, proveniência registrada no cabeçalho do arquivo.
+- Skills instaladas via `find-skills`/`npx skills` durante uma sessão valem a mesma regra:
+  escopo pessoal (`-g`) à vontade; para entrar no repo, revisão antes.
 - **Shannon**: ferramenta de pentest é dual-use. Uso autorizado apenas: nosso app, ambiente
   de staging/sandbox, nunca contra terceiros ou produção.
 - Os plugins do time ficam fixos em `.claude/settings.json` — mudança ali passa por PR, como
