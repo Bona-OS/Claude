@@ -6,8 +6,9 @@ economia de tokens, metodologia).
 
 Duas camadas:
 
-1. **Configurados no repo** (`.claude/settings.json`): ao abrir o projeto e confiar na pasta,
-   o Claude Code oferece instalar automaticamente os plugins do time.
+1. **Configurados no repo** (`.claude/settings.json` + `.mcp.json`): ao abrir o projeto e
+   confiar na pasta, o Claude Code oferece instalar automaticamente os plugins do time e o
+   servidor MCP Context7.
 2. **Catálogo opcional** (skills do "Top 10 — @aiedge_, jul/2026"): cada dev instala o que
    quiser, por conta própria — a maioria é escopo pessoal (`~/.claude/skills`), não do projeto.
 
@@ -16,7 +17,9 @@ Duas camadas:
 
 ---
 
-## 1. Os 5 plugins do time
+## 1. Plugins do time
+
+Os 5 indicados originalmente, mais dois promovidos do Top 10 (seção 2) por decisão do time:
 
 | Plugin | O que é | Por que vale para o FotoRestaura |
 |---|---|---|
@@ -25,6 +28,8 @@ Duas camadas:
 | **Claude Mem** | Memória persistente entre sessões (captura → comprime → reinjeta contexto) | Decisões do produto (preço, quirks do webhook da Meta, formato do Pix) sobrevivem de uma sessão para outra |
 | **Caveman** | Modo de saída ultracomprimido (~65–75% menos tokens de output) | Sessões longas mais baratas; ative com `/caveman` quando quiser |
 | **Security Guidance** (oficial Anthropic) | Revisão de segurança em 3 camadas: avisos por padrão perigoso em Edit/Write, revisão LLM do diff a cada turno e revisão agêntica no `git commit` | **O mais importante para nós**: o repo processa pagamento (Pix), tokens do WhatsApp e fotos de clientes — injection, SSRF, segredo hardcoded e IDOR são riscos reais aqui |
+| **/last30days** (do Top 10) | Pesquisa qualquer tema nos últimos 30 dias em Reddit, X, YouTube, HN etc., ranqueado por engajamento real | Pauta de criativos e ângulos de anúncio baseados no que roda de verdade |
+| **/watch** — Claude-Video (do Top 10) | Baixa vídeo, extrai frames e transcrição — o Claude "assiste" | Analisar anúncios concorrentes e nossos criativos |
 
 ### Instalação manual (se o prompt automático não aparecer)
 
@@ -37,23 +42,21 @@ Duas camadas:
 
 /plugin marketplace add mihai-pompiliu/caveman_claude-code-plugin
 /plugin install caveman@caveman
+
+/plugin marketplace add mvanhorn/last30days-skill
+/plugin install last30days@last30days-skill
+
+/plugin marketplace add bradautomates/claude-video
+/plugin install watch@claude-video
 ```
 
 Depois rode `/reload-plugins` (ou reinicie a sessão).
 
-**Context7** é um servidor MCP, não um plugin — instalação por dev (decidimos não versionar
-`.mcp.json` no repo):
-
-```bash
-# wizard oficial (OAuth + chave + skill):
-npx ctx7 setup --claude
-
-# ou direto, sem chave (rate limit menor):
-claude mcp add --transport http context7 https://mcp.context7.com/mcp
-```
-
-Chave gratuita em [context7.com/dashboard](https://context7.com/dashboard) — passa no header
-`CONTEXT7_API_KEY`.
+**Context7** é um servidor MCP, não um plugin — vem configurado no [`.mcp.json`](../.mcp.json)
+versionado no repo (ao abrir o projeto, o Claude Code pede aprovação do servidor). Funciona
+sem chave, com rate limit menor; chave gratuita em
+[context7.com/dashboard](https://context7.com/dashboard) — configure por dev com
+`npx ctx7 setup --claude` ou passando o header `CONTEXT7_API_KEY`.
 
 ### Requisitos e observações
 
@@ -64,13 +67,18 @@ Chave gratuita em [context7.com/dashboard](https://context7.com/dashboard) — p
   o marketplace que usamos é o empacotamento do link indicado. Níveis: lite, full, ultra.
 - **Superpowers:** também existe no marketplace do autor (`obra/superpowers-marketplace`),
   mas a versão do marketplace oficial basta.
+- **/watch (Claude-Video):** requer `ffmpeg` + `yt-dlp` na máquina; a primeira execução guia a
+  instalação. Chave Whisper (Groq/OpenAI) só para vídeo sem legenda — opcional.
+- **/last30days:** funciona sem chave (Reddit, HN, Polymarket, GitHub); X/YouTube/TikTok são
+  opt-in no wizard da primeira execução, com chave própria.
 
 ---
 
 ## 2. Catálogo — "Top 10 AI Skills" (imagem @aiedge_, jul/2026)
 
-Opcionais, por dev. Ranking da imagem, com o que verificamos e a relevância **para este
-projeto**. Instalação via [`npx skills`](https://skills.sh) vai para `~/.claude/skills`
+Ranking da imagem, com o que verificamos e a relevância **para este projeto**. Dois deles
+(`/last30days` e `/watch`) foram **promovidos a plugins do time** — ver seção 1. O restante é
+opcional, por dev: instalação via [`npx skills`](https://skills.sh) vai para `~/.claude/skills`
 (pessoal); nada disso entra no repo sem revisão (ver seção 3).
 
 | # | Skill | O que faz | Relevância p/ nós | Instalação |
@@ -82,8 +90,8 @@ projeto**. Instalação via [`npx skills`](https://skills.sh) vai para `~/.claud
 | 5 | **Unslop UI** ([JCarterJohnson/vibecoded-design-tells](https://github.com/JCarterJohnson/vibecoded-design-tells)) | Remove os "tells" de site feito por IA (gradiente roxo, hero centrado + 3 cards, emoji como ícone…) | **Média** — complementa o Taste na landing | baixar o `.skill` do repo e `unzip` em `~/.claude/skills/` |
 | 6 | **GOG — Workspace CLI** (clawhub.ai/steipete) | CLI de Google Workspace (Gmail, Drive, Docs…) | **N/A** — é para o harness OpenClaw | `openclaw skills install @steipete/gog` |
 | 7 | **Kill AI Slop** ([hardikpandya/stop-slop](https://github.com/hardikpandya/stop-slop)) | Corta os tells de escrita de IA (frases proibidas, contrastes binários, voz passiva) e pontua o texto em 5 dimensões | **Alta** — copy da landing e legendas/hashtags da `lib/marketing.ts` sem cara de IA | sem instalador: copiar o `SKILL.md` do repo para `~/.claude/skills/stop-slop/` |
-| 8 | **/last30days** ([mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill)) | Pesquisa qualquer tema nos últimos 30 dias em Reddit, X, YouTube, HN etc., ranqueado por engajamento real | **Alta** — pauta de criativos e ângulos de anúncio baseados no que está rodando de verdade. Funciona sem chave (Reddit/HN/GitHub); X/YouTube são opt-in | `/plugin marketplace add mvanhorn/last30days-skill` (ou `npx skills add mvanhorn/last30days-skill -g`) |
-| 9 | **Claude-Video** ([bradautomates/claude-video](https://github.com/bradautomates/claude-video)) | `/watch`: baixa vídeo, extrai frames e transcrição — o Claude "assiste" | **Média** — analisar anúncios concorrentes e nossos criativos. Requer `ffmpeg` + `yt-dlp` | `/plugin marketplace add bradautomates/claude-video` → `/plugin install watch@claude-video` |
+| 8 | **/last30days** ([mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill)) | Pesquisa qualquer tema nos últimos 30 dias em Reddit, X, YouTube, HN etc., ranqueado por engajamento real | **Alta** — pauta de criativos e ângulos de anúncio baseados no que está rodando de verdade | ✅ **já habilitado para o time** via `.claude/settings.json` |
+| 9 | **Claude-Video** ([bradautomates/claude-video](https://github.com/bradautomates/claude-video)) | `/watch`: baixa vídeo, extrai frames e transcrição — o Claude "assiste" | **Média** — analisar anúncios concorrentes e nossos criativos. Requer `ffmpeg` + `yt-dlp` | ✅ **já habilitado para o time** via `.claude/settings.json` |
 | 10 | **/loopy** ([Forward-Future/loop-library](https://github.com/Forward-Future/loop-library)) | Transforma prompts one-shot em loops com feedback (descobrir, auditar, adaptar, rodar) | **Média** — ex.: loop de avaliação de qualidade de restauração em lote | `npx skills add Forward-Future/loopy --skill loopy --agent claude-code -g -y` |
 
 Todos os repos acima foram verificados (existem e fazem o que a imagem diz), exceto os dois

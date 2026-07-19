@@ -54,9 +54,10 @@ Veja [`.env.example`](.env.example). Em resumo: `GEMINI_API_KEY`, `SUPABASE_URL`
 
 ## Ferramentas de dev (Claude Code)
 
-O repo configura automaticamente os plugins do time (Superpowers, Claude Mem, Caveman e
-Security Guidance) via `.claude/settings.json`. Catálogo completo — incluindo Context7 (MCP)
-e o "Top 10 AI Skills" opcional — em [`docs/PLUGINS.md`](docs/PLUGINS.md).
+O repo configura automaticamente os plugins do time (Superpowers, Claude Mem, Caveman,
+Security Guidance, /last30days e /watch) via `.claude/settings.json`, e o Context7 (MCP) via
+`.mcp.json`. Catálogo completo — incluindo o "Top 10 AI Skills" opcional — em
+[`docs/PLUGINS.md`](docs/PLUGINS.md).
 
 ## Próximos passos
 
