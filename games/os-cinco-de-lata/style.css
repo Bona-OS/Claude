@@ -1,0 +1,222 @@
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  src: url('vendor/fonts/press-start-2p-latin-400-normal.woff2') format('woff2');
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+/* o canvas renderiza pixelado e o CSS estica sem suavizar — pixel perfeito.
+   A UI por cima é NÍTIDA e moderna (contraste HD-2D: mundo retrô, vidro atual). */
+#game {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#ui {
+  position: fixed; inset: 0; pointer-events: none;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Inter', sans-serif;
+  color: #f4f1e8;
+  --glass: rgba(9, 13, 21, .58);
+  --line: rgba(255, 255, 255, .13);
+  --gold: #f2c96a;
+  --gold-soft: #e2b45a;
+  --red: #ff6252;
+  --ink: rgba(0, 0, 0, .5);
+}
+
+/* ---------- painel de vidro (base de tudo) ---------- */
+.panel {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px) saturate(1.25);
+  backdrop-filter: blur(10px) saturate(1.25);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .07);
+}
+.hidden { display: none !important; }
+
+kbd {
+  display: inline-block;
+  font: 600 .78em/1 ui-sans-serif, system-ui, sans-serif;
+  color: #10151f;
+  background: linear-gradient(180deg, #f4f1e8, #cfc9b8);
+  border-radius: 5px;
+  padding: 3px 7px 4px;
+  margin: 0 2px;
+  box-shadow: 0 2px 0 #8f8a7a;
+  vertical-align: middle;
+  letter-spacing: .02em;
+}
+
+/* ---------- topo: objetivo (esq) e status (dir) ---------- */
+#hud-top {
+  position: absolute; top: 14px; left: 14px; right: 14px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+}
+#hud-objective, #hud-status {
+  padding: 9px 14px;
+  font-size: 14px; font-weight: 600; letter-spacing: .01em;
+  animation: rise .45s cubic-bezier(.2, .9, .25, 1);
+}
+#hud-objective { max-width: 56%; display: flex; align-items: center; gap: 10px; }
+#hud-objective .chipno {
+  flex: none;
+  font-weight: 800; font-size: 12px; color: #10151f;
+  background: linear-gradient(180deg, var(--gold), var(--gold-soft));
+  border-radius: 8px; padding: 4px 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+}
+#hud-status { white-space: nowrap; display: flex; align-items: center; gap: 7px; }
+#hud-status b { color: var(--gold); font-weight: 800; font-size: 15px; }
+#hud-status .of { font-style: normal; opacity: .55; font-size: 12px; margin-left: 1px; }
+#hud-status .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; opacity: .62; }
+#hud-status .dot { font-style: normal; opacity: .3; margin: 0 2px; }
+#hud-status.pop { animation: pop .3s cubic-bezier(.2, 1.4, .4, 1); }
+.hp { width: 17px; height: 17px; flex: none; margin: 0 -1px; }
+.hp.on path { fill: var(--red); filter: drop-shadow(0 0 5px rgba(255, 98, 82, .6)); }
+.hp.off path { fill: rgba(255, 255, 255, .14); }
+
+/* ---------- grupo: chips circulares no rodapé esquerdo ---------- */
+#hud-party {
+  position: absolute; left: 14px; bottom: 14px;
+  display: flex; gap: 8px; align-items: flex-end;
+}
+#hud-party .chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  opacity: .6; transform: scale(.92);
+  transition: opacity .25s, transform .25s, box-shadow .25s;
+}
+#hud-party .chip .ring {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.5), rgba(255,255,255,0) 45%), var(--c);
+  border: 2px solid rgba(0, 0, 0, .35);
+  font-size: 12px; font-weight: 800; color: #10151f;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+}
+#hud-party .chip .pname {
+  font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+  max-width: 0; overflow: hidden; opacity: 0;
+  transition: max-width .3s, opacity .25s, padding .3s;
+}
+#hud-party .chip.active {
+  opacity: 1; transform: scale(1);
+  border-color: rgba(242, 201, 106, .8);
+  box-shadow: 0 0 14px rgba(242, 201, 106, .35), 0 8px 20px rgba(0, 0, 0, .35);
+}
+#hud-party .chip.active .pname { max-width: 90px; opacity: 1; padding-right: 9px; }
+
+/* ---------- diálogo: lower-third cinematográfico ---------- */
+#hud-message {
+  position: absolute; bottom: 68px; left: 50%; transform: translateX(-50%);
+  max-width: min(680px, 84%); min-width: 320px;
+  padding: 13px 20px 14px;
+  font-size: 15.5px; line-height: 1.5; text-align: center;
+  text-shadow: 0 1px 3px var(--ink);
+  animation: slideup .35s cubic-bezier(.2, .9, .25, 1);
+}
+#hud-message .who {
+  display: block;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 3px;
+}
+#hud-message.danger { border-color: rgba(255, 98, 82, .55); }
+#hud-message.danger .who { color: var(--red); }
+
+/* ---------- vinheta de perigo: moldura pulsante, NUNCA cobre o centro ---------- */
+#danger-vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 42px 10px rgba(200, 30, 8, .55);
+  opacity: 0; transition: opacity .4s;
+}
+#danger-vignette.active { opacity: 1; animation: danger-pulse .7s ease-in-out infinite; }
+@keyframes danger-pulse {
+  0%, 100% { box-shadow: inset 0 0 42px 10px rgba(200, 30, 8, .55); }
+  50% { box-shadow: inset 0 0 26px 5px rgba(200, 30, 8, .35); }
+}
+
+/* ---------- cartão de intro de fase: título de cinema ---------- */
+#hud-card, #hud-result {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background-color: rgba(6, 9, 15, .62);
+  background-size: cover; background-position: center;
+}
+#hud-card .card-inner, #hud-result .result-inner {
+  text-align: center; max-width: 640px; padding: 34px 44px;
+  animation: rise .5s cubic-bezier(.2, .9, .25, 1);
+}
+#hud-card .card-type {
+  font-size: 11px; font-weight: 800; letter-spacing: .34em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 12px;
+}
+#hud-card .card-name {
+  font-size: clamp(28px, 5vw, 44px); font-weight: 800; letter-spacing: -.015em;
+  line-height: 1.08; margin-bottom: 14px;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .55);
+}
+#hud-card .card-objective {
+  font-size: 15px; line-height: 1.65; color: rgba(244, 241, 232, .82); margin-bottom: 22px;
+}
+#hud-card .card-hint, #hud-result .result-hint {
+  font-size: 13px; color: rgba(244, 241, 232, .85);
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+/* ---------- resultado ---------- */
+#hud-result .result-title {
+  font-size: clamp(40px, 7vw, 64px); font-weight: 900; letter-spacing: .04em;
+  margin-bottom: 12px;
+  background: linear-gradient(180deg, #ffe9ad, var(--gold) 55%, #b8862f);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 3px 14px rgba(242, 201, 106, .35));
+}
+#hud-result.lose .result-title {
+  background: linear-gradient(180deg, #ffb3a6, var(--red) 55%, #8f2f22);
+  -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(0 3px 14px rgba(255, 98, 82, .3));
+}
+#hud-result .result-text { font-size: 15.5px; line-height: 1.7; color: rgba(244, 241, 232, .88); margin-bottom: 20px; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes slideup { from { opacity: 0; transform: translate(-50%, 12px); } }
+@keyframes pop { 40% { transform: scale(1.12); } }
+@keyframes breathe { 50% { opacity: .4; } }
+
+/* ---------- tela-título: logo pixel (herança) + vidro moderno ---------- */
+#title-card {
+  position: fixed; top: 13%; left: 50%; transform: translateX(-50%);
+  text-align: center; pointer-events: none;
+  color: #f4f1e8;
+  transition: opacity 1.2s;
+  z-index: 5;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+#title-card h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 28px; letter-spacing: 2px; color: var(--gold);
+  text-shadow: 0 3px 0 rgba(0, 0, 0, .45), 0 0 26px rgba(242, 201, 106, .35);
+}
+#title-card .sub { font-size: 14px; font-weight: 600; margin-top: 12px; color: rgba(244, 241, 232, .9); text-shadow: 0 1px 3px var(--ink); }
+#title-card .credits { font-size: 12px; margin-top: 6px; color: rgba(244, 241, 232, .55); text-shadow: 0 1px 3px var(--ink); }
+#title-card .howto {
+  margin-top: 20px; font-size: 12.5px; line-height: 2.3; font-weight: 500;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px) saturate(1.25);
+  backdrop-filter: blur(10px) saturate(1.25);
+  border: 1px solid var(--line); border-radius: 14px; padding: 12px 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+}
+#title-card.fade { opacity: 0; }

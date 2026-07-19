@@ -1,0 +1,7 @@
+id,kind,description,aspect,used_in
+bg_capim,background,"endless plain of giant grass blades like green towers under a burning sunset sky, tiny dirt trail below",16:9,"fases 1, 5 e 9 (horizonte)"
+bg_floresta,background,"twilight forest of colossal grass stalks and fallen red leaves, warm light shafts between stems",16:9,"fase 4 (horizonte)"
+bg_rio,background,"vast river at dusk seen from the water, far shore with reeds, orange sky reflected in dark blue water",16:9,"fase 8 (horizonte)"
+bg_mirmecia,background,"monumental anthill city-fortress with towers and gates silhouetted against a flaming sunset",16:9,"fase 10 e tela-título (horizonte)"
+thumbnail,background,"five tiny tin-can knights with silver foil armor standing on a grass-blade cliff gazing at a distant anthill fortress in golden sunset",16:9,"capa do deploy (OG/catálogo)"
+favicon,ui,"tin-can knight helmet emblem with red petal plume on deep blue menu panel",1:1,"favicon do deploy"

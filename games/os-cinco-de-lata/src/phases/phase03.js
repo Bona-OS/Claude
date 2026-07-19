@@ -1,0 +1,248 @@
+// Fase 3 — As Montanhas de Pétalas (world) · Capítulo 2
+// Stealth nos depósitos de Mirmécia: pegue 3 pétalas-mapa e fuja pela
+// fenda sem ser visto pelas formigas-sentinela.
+
+import * as THREE from 'three';
+import { GamePhase, Walker, FollowCam, Hearts, handleParty, dist2d } from './framework.js';
+import { caveLights, colorMat, makeAnt, makePetalMound, makeGoal, groundTexture, scatterDetail } from '../world/builders.js';
+import { Crate, stompCheck, SpinAttack, Checkpoint, Collectibles } from '../world/crash.js';
+
+const AREA = 46;
+
+export class Phase03 extends GamePhase {
+  constructor() {
+    super(3, 'As Montanhas de Pétalas', 'world',
+      'Pegue as 3 pétalas-mapa ❀ e fuja pela fenda — sem ser visto pelas sentinelas.');
+  }
+
+  build(ctx) {
+    const scene = ctx.scene;
+    caveLights(scene, { fogColor: 0x3a2410, amberGlow: true });
+    scene.fog.near = 26; scene.fog.far = 140;
+    // o lampião de Tino: furtivo, mas nunca cego
+    this.lantern = new THREE.PointLight(0xf0b46a, 60, 26);
+    scene.add(this.lantern);
+
+    const floorTex = groundTexture(0x6b4a24, { variant: 'rock' });
+    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+    floorTex.repeat.set(6, 6);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(AREA * 2.4, AREA * 2.4), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 1 }));
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+    // pedras espalhadas pela caverna (densidade — tira o vazio)
+    scatterDetail(scene, { count: 40, center: [0, 0, 0], area: [AREA * 1.8, AREA * 1.8], corridor: 3, palette: [0x8a5a2f, 0x6b4a24, 0x56575e] });
+
+    // colunas de âmbar que iluminam (e dão cobertura)
+    for (let i = 0; i < 10; i++) {
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.8, 16, 7),
+        colorMat(0xc2602f, { emissive: 0x6e2c16, emissiveIntensity: 0.7 }));
+      col.position.set((Math.random() - 0.5) * AREA * 1.8, 8, (Math.random() - 0.5) * AREA * 1.8);
+      col.castShadow = true;
+      scene.add(col);
+    }
+    // montanhas de pétalas (cobertura principal)
+    this.mounds = [];
+    for (let i = 0; i < 14; i++) {
+      const m = makePetalMound(scene, {
+        x: (Math.random() - 0.5) * AREA * 1.9,
+        z: (Math.random() - 0.5) * AREA * 1.9,
+        r: 3 + Math.random() * 4,
+      });
+      this.mounds.push(m);
+    }
+
+    // 3 pétalas-mapa para coletar
+    this.petals = [];
+    for (const [x, z] of [[-AREA + 8, -AREA + 8], [AREA - 8, 0], [0, AREA - 10]]) {
+      const petal = new THREE.Mesh(new THREE.CircleGeometry(0.9, 8), colorMat(0xf0b46a, { emissive: 0xf0b46a, emissiveIntensity: 0.6, side: THREE.DoubleSide }));
+      petal.rotation.x = -Math.PI / 2;
+      petal.position.set(x, 0.4, z);
+      scene.add(petal);
+      this.petals.push(petal);
+    }
+    this.collected = 0;
+
+    // sentinelas patrulhando em rotas circulares, com cone de visão
+    this.guards = [];
+    const coneGeo = new THREE.ConeGeometry(4.5, 12, 12, 1, true);
+    coneGeo.translate(0, -6, 0);
+    coneGeo.rotateX(-Math.PI / 2);
+    for (let i = 0; i < 4; i++) {
+      const ant = makeAnt({ color: 0x2c1d11 });
+      ant.scale.setScalar(1.6);
+      ant.userData.stompHeight = 1.9; // p/ stompCheck: altura aproximada do topo
+      const cone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({ color: 0xf0b46a, transparent: true, opacity: 0.12, side: THREE.DoubleSide }));
+      cone.position.y = 1;
+      ant.add(cone);
+      scene.add(ant);
+      this.guards.push({
+        mesh: ant,
+        cx: (Math.random() - 0.5) * AREA, cz: (Math.random() - 0.5) * AREA,
+        r: 10 + Math.random() * 9, a: Math.random() * Math.PI * 2,
+        speed: 0.45 + Math.random() * 0.25,
+      });
+    }
+
+    // a fenda de saída
+    this.exit = makeGoal(scene, { z: -AREA - 4, bannerColor: 0xf0b46a });
+    this.exit.position.x = 0;
+
+    // --- demonstração dos sistemas de crash.js (aditivo, não mexe na vitória) ---
+    // coletáveis liberados pelas caixas normais (2 caixas normais = total fixo)
+    this.collectibles = new Collectibles(ctx, { goal: 2 });
+    this.crates = [
+      new Crate(scene, new THREE.Vector3(-16, 0.75, 18), { type: 'normal', collectibles: this.collectibles }),
+      new Crate(scene, new THREE.Vector3(14, 0.75, -6), { type: 'normal', collectibles: this.collectibles }),
+      new Crate(scene, new THREE.Vector3(-10, 0.75, -18), { type: 'bounce' }),
+      new Crate(scene, new THREE.Vector3(20, 0.75, 22), { type: 'iron' }),
+    ];
+    // checkpoint no meio do caminho (marco de passagem — ver nota no update())
+    this.checkpoint = new Checkpoint(scene, new THREE.Vector3(-18, 0, -4));
+    // giro de ataque do líder: tecla Q, quebra caixas de ferro e afasta sentinelas
+    this.spin = new SpinAttack(ctx);
+
+    const leaderMesh = ctx.party.spawn(scene, new THREE.Vector3(0, 0, AREA - 4));
+    this.walker = new Walker(ctx, leaderMesh, {
+      speed: 10,
+      clamp: (p) => {
+        p.x = THREE.MathUtils.clamp(p.x, -AREA, AREA);
+        p.z = THREE.MathUtils.clamp(p.z, -AREA - 6, AREA);
+      },
+    });
+    this.cam = new FollowCam(ctx.camera, { height: 8, back: 12 });
+    this.cam.snap(leaderMesh.position);
+    this.hearts = new Hearts(ctx);
+    this.alarm = 0;
+    this._lastCollectibles = 0;
+    this._hud(ctx);
+    ctx.hud.say('Ávio: — Pisa leve. Aqui embaixo até as pétalas escutam.', { time: 4500 });
+  }
+
+  _hud(ctx) {
+    ctx.hud.setStatus(`PETALAS ${this.collected}/3   ${this.collectibles.hud()}   ${this.hearts.display}`);
+  }
+
+  _seen(ctx, guard) {
+    const p = this.walker.mesh.position;
+    const g = guard.mesh.position;
+    const d = dist2d(p, g);
+    if (d > 13) return false;
+    // atrás de uma montanha de pétalas = escondido
+    for (const m of this.mounds) {
+      if (dist2d(p, m.position) < m.geometry.parameters.radius * 0.9) return false;
+    }
+    // dentro do cone (ângulo até a direção da sentinela)
+    const dir = Math.atan2(p.x - g.x, p.z - g.z);
+    let diff = dir - guard.mesh.rotation.y;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    // Shift = andar agachado: cone efetivo menor
+    const halfAngle = ctx.input.down('ShiftLeft', 'ShiftRight') ? 0.28 : 0.42;
+    return Math.abs(diff) < halfAngle;
+  }
+
+  update(ctx, dt) {
+    this.walker.update(dt);
+    handleParty(ctx, this.walker);
+    const p = this.walker.mesh.position;
+    this.lantern.position.set(p.x, 3.2, p.z);
+
+    // pétalas
+    for (let i = this.petals.length - 1; i >= 0; i--) {
+      const petal = this.petals[i];
+      petal.rotation.z += dt;
+      if (dist2d(p, petal.position) < 1.8) {
+        ctx.scene.remove(petal);
+        this.petals.splice(i, 1);
+        this.collected++;
+        ctx.audio.sfx('pickup');
+        this._hud(ctx);
+        ctx.hud.say(this.collected === 3
+          ? 'Tino: — É um mapa da cidade! Agora a fenda, rápido!'
+          : `Uma pétala prensada com marcas... (${this.collected}/3)`);
+      }
+    }
+
+    // caixas: caem quebrando (normal/bump), saltam (bounce) ou resistem (iron)
+    for (const crate of this.crates) {
+      if (crate.broken) continue;
+      if (dist2d(p, crate.position) > crate.radius + 0.9) continue;
+      if (crate.type === 'bounce') {
+        if (this.walker.velY <= 0) {
+          this.walker.velY = 15;
+          this.walker.onGround = false;
+          ctx.audio.sfx('jump');
+          ctx.juice.shake(0.12, 0.1);
+        }
+        continue;
+      }
+      crate.hitBy(ctx, this.walker.velY < -2 ? 'stomp' : 'bump');
+    }
+
+    // giro de ataque do líder (tecla Q) — quebra caixas de ferro, afasta sentinelas
+    if (ctx.input.justPressed('KeyQ')) this.spin.trigger();
+    this.spin.update(dt, p, {
+      crates: this.crates,
+      enemies: this.guards.filter((g) => !g.mesh.userData.dead).map((g) => g.mesh),
+      radius: 2.5,
+    });
+
+    // pular em cima de uma sentinela a nocauteia (some da patrulha)
+    stompCheck(ctx, this.walker, this.guards.map((g) => g.mesh), {
+      onStomp: (mesh) => {
+        mesh.visible = false;
+        ctx.hud.say('Sentinela nocauteada — uma a menos de olho na gente!', { time: 1800 });
+      },
+    });
+
+    this.checkpoint.check(ctx, p);
+    this.collectibles.update(dt, p);
+    if (this.collectibles.count !== this._lastCollectibles) {
+      this._lastCollectibles = this.collectibles.count;
+      this._hud(ctx);
+    }
+
+    // sentinelas
+    let spotted = false;
+    for (const guard of this.guards) {
+      if (guard.mesh.userData.dead) continue; // nocauteada por stomp — não patrulha nem vê
+      guard.a += guard.speed * dt;
+      const gx = guard.cx + Math.cos(guard.a) * guard.r;
+      const gz = guard.cz + Math.sin(guard.a) * guard.r;
+      guard.mesh.rotation.y = Math.atan2(gx - guard.mesh.position.x, gz - guard.mesh.position.z);
+      guard.mesh.position.set(gx, 0, gz);
+      if (this._seen(ctx, guard)) spotted = true;
+    }
+    if (spotted) {
+      this.alarm += dt;
+      ctx.hud.danger(true);
+      if (this.alarm > 1.1) {
+        this.alarm = 0;
+        ctx.audio.sfx('hurt');
+        if (this.hearts.hit('— INTRUSOS! — A corneta de pétala ecoou pelos depósitos!')) {
+          return this.onLose(ctx, 'Em Mirmécia, tudo que brilha é vigiado.<br/>E cinco de lata brilham demais.');
+        }
+        this._hud(ctx);
+      }
+    } else {
+      this.alarm = Math.max(0, this.alarm - dt * 2);
+      ctx.hud.danger(false);
+    }
+
+    this.hearts.update(dt, this.walker.mesh);
+
+    // fuga
+    if (p.z <= -AREA - 1) {
+      if (this.collected >= 3) {
+        return this.onWin(ctx,
+          'Saíram pela fenda com o mapa nas mãos e o coração na boca.<br/>Brio riu — depois do perigo, como sempre.',
+          this.hearts.n);
+      }
+      ctx.hud.say(`Tino: — Sem o mapa a gente se perde! Faltam ${3 - this.collected} pétalas.`, { danger: true });
+      p.z = -AREA + 1;
+    }
+
+    this.cam.update(p, dt);
+  }
+}
