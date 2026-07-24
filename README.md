@@ -60,6 +60,11 @@ Security Guidance, /last30days e /watch) via `.claude/settings.json`, o Context7
 tarefa) via `.claude/skills/`. Catálogo completo — incluindo o "Top 10 AI Skills" opcional —
 em [`docs/PLUGINS.md`](docs/PLUGINS.md).
 
+## Bona (assistente pessoal)
+
+Blueprint do Bona — sessão Claude persistente com canal WhatsApp, delegação em background e
+divisão Fable/GPT — em [`docs/BONA.md`](docs/BONA.md).
+
 ## Próximos passos
 
 Checklist de go-live e roadmap em [`docs/PLANO.md`](docs/PLANO.md).
