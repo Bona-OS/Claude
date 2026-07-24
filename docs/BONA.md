@@ -60,21 +60,22 @@ que é o que importa.
 - E-mail: connector do Gmail (ler, classificar, rascunhar; envio sempre confirmado).
 - **Toda mensagem recebida é input não confiável** — ver seção 6.
 
-### Memória — fontes e migração (corrigir a defasagem)
+### Memória — nasce enxuto, aprende no uso
 
-O claude-mem só acumula daqui em diante — por isso está atrás da memória do Codex. A
-correção é **semear**, não esperar:
+**Filosofia (decisão do dono): o Bona não nasce sabendo tudo — aprende e melhora na
+convivência.** Nada de despejo prévio de histórico.
 
 - **Fonte de verdade compartilhada**: `memoria/FATOS.md` no workspace do Bona — fatos da
   vida (pessoas, contas, contratos, rotinas, preferências), curado e versionado. Claude e
-  Codex leem e atualizam o **mesmo** arquivo (camada 2 da seção 3): a memória é fundida
-  mesmo com as interfaces separadas.
-- **Migração (job único, em background)**: ler (a) a memória local do Codex (AGENTS.md e
-  arquivos de memória no host) e (b) o **histórico do wacli** (mensagens e mídias) e
-  **destilar** para `memoria/` — resumo estruturado por tema; nunca despejo bruto de log.
-- **Regras**: conteúdo do wacli é sensível — fica no host do Bona, não sobe para repo;
-  mídia que vale guardar vai para o Drive (Arquivo); o claude-mem indexa as sessões novas
-  a partir daí, e o Bona atualiza `FATOS.md` quando um fato da vida muda.
+  Codex leem e atualizam o **mesmo** arquivo (camada 2 da seção 3). Começa **mínimo**
+  (pessoas e contas principais) e cresce com o uso.
+- **Aprendizado incremental**: cada orientação ou correção do dono ("essa conta vai
+  naquela pasta", "prefiro assim") vira atualização do `FATOS.md` na hora — na próxima
+  vez o Bona já sabe. O claude-mem acumula o resto das sessões automaticamente.
+- **Fontes antigas como arquivo de consulta (pull, não seed)**: a memória local do Codex
+  e o histórico do wacli ficam no Mac Mini como **acervo consultável sob demanda** —
+  quando faltar contexto, o Bona consulta, extrai só o fato necessário e registra no
+  `FATOS.md`. Conteúdo bruto é sensível: fica no host, nunca sobe para repo.
 
 ### Agenda — dois calendários, papéis distintos
 
@@ -95,7 +96,9 @@ digitável prontos** → **você dá o toque no banco**.
 Depois do pagamento, o ciclo completo:
 
 1. **Comprovante**: você encaminha o comprovante (ou ele chega por e-mail) → Bona arquiva
-   no **Drive** (`Financeiro/<ano>/<mês>/`), nomeado `data-fornecedor-valor`.
+   no **Drive**, nas **pastas que já existem** — o dono aponta a pasta certa conforme paga,
+   o Bona registra o mapeamento conta→pasta no `FATOS.md` e passa a arquivar sozinho nas
+   próximas.
 2. **Distribuição**: Bona envia o comprovante a quem precisa por **WhatsApp e/ou e-mail**
    (destinatário por conta definido em `memoria/FATOS.md`) — envio externo sempre com
    confirmação do dono.
@@ -140,10 +143,11 @@ claude --dangerously-load-development-channels plugin:whatsapp-claude-channel@wh
 ```
 
 Depois: persona/CLAUDE.md do Bona no diretório dele (nome, tom, regras 2, 5 e 6 resumidas),
-claude-mem ativo, Codex CLI autenticado no host, **job de migração de memória** (Codex +
-wacli → `memoria/`, seção 4), clone da agenda do GitHub no workspace, e Routines básicas:
-revisão matinal de e-mail/contas, sync de agenda (GitHub → Google) e fechamento mensal.
-Transcrição de voz opcional: Python 3 + ffmpeg (+ mlx-whisper em Mac).
+claude-mem ativo, Codex CLI autenticado no host, `memoria/FATOS.md` **inicial mínimo**
+(pessoas e contas principais — o resto ele aprende no uso, seção 4), clone da agenda do
+GitHub no workspace, e Routines básicas: revisão matinal de e-mail/contas, sync de agenda
+(GitHub → Google) e fechamento mensal. Transcrição de voz opcional: Python 3 + ffmpeg
+(+ mlx-whisper em Mac).
 
 > Escopo pessoal, não do time: o plugin de WhatsApp é canal de controle remoto de sessão —
 > **não entra** no `.claude/settings.json` do repo.
