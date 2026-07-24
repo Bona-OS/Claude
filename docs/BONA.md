@@ -78,19 +78,25 @@ dois leem a mesma fonte. Interfaces separadas, memória una (camada 2 da seção
 - **Nasce enxuto, aprende no uso**: sem despejo prévio de histórico. O `FATOS.md` começa
   mínimo (pessoas e contas principais); cada orientação ou correção do dono ("essa conta
   vai naquela pasta", "prefiro assim") vira atualização na hora — na próxima vez o Bona
-  já sabe.
+  já sabe. **A semente vem do resumo já destilado da memória do Codex** (o arquivo de
+  resumo compacto de perfil que ele mantém), nunca de logs brutos — e os três perfis que
+  o inventário apontou como inexistentes em arquivo único (dono, Vanessa e a persona do
+  Bona) nascem como seções do próprio `FATOS.md`.
 - **wacli é memória viva, não arquivo morto**: segue rodando no Mac Mini registrando as
   conversas; a consulta do Bona é read-only e a escrita é sempre **destilada** para o
   `FATOS.md`. Conteúdo bruto é sensível — fica no host, nunca sobe para repo.
 
-### Agenda — dois calendários, papéis distintos
+### Agenda — app, dados e espelhos (corrigido pelo inventário de 24/07/2026)
 
-- **Primária: a agenda hospedada no GitHub** (uso do casal — dono e Vanessa). Por ser git,
-  o Bona lê e escreve nela nativamente; é a **fonte de verdade de eventos**.
-- **Espelho enriquecido: Google Calendar** (connector), que carrega os detalhes de
-  pagamento nos eventos — **código Pix, linha digitável, vencimentos**.
-- O Bona mantém o espelho (Routine de sync primária → Google) e é **do espelho que o
-  pipeline financeiro lê os códigos** no dia do vencimento (seção 5).
+- **App**: a agenda do casal é uma PWA versionada em repo GitHub da conta `bedinjoao` e
+  publicada via GitHub Pages — o Bona lê e escreve no código por git.
+- **Dados**: os compromissos vivem no backend do app (Firestore). **Pendência formal do
+  inventário**: a precedência exata (backend sempre canônico vs. reconciliação com os
+  calendários) não está confirmada — **confirmar antes de automatizar escrita**.
+- **Espelhos enriquecidos: dois calendários Google** (o pessoal do dono e o da empresa),
+  carregando os detalhes de pagamento — código Pix, linha digitável, vencimentos. É deles
+  que o pipeline financeiro lê os códigos (seção 5). Fontes de calendário aposentadas
+  registradas no runtime são respeitadas — não reativar.
 
 ## 5. Financeiro (contas em dia, sem credencial bancária)
 
@@ -111,6 +117,16 @@ Depois do pagamento, o ciclo completo:
 3. **Fechamento mensal** (Routine no fim do mês): planilha do mês + comprovantes do Drive
    → relatório (xlsx + PDF) → **e-mail para a contabilidade** e cópia para a administração
    do casal. Pendências (conta sem comprovante, vencimento estourado) entram destacadas.
+
+**Realidade herdada (inventário de 24/07/2026):** essa esteira **já existe em produção**
+no runtime atual — serviços launchd de intake de comprovantes na DM, resolução de anexos
+do Gmail, refresh operacional e observação de estabilidade, mais índices estruturados
+(compromissos, cartões operacionais, brief diário, registro de comprovantes). A Fase 1
+**herda esses serviços funcionando — não desliga nem reconstrói**; a responsabilidade
+migra gradualmente, com auditoria. E o financeiro tem **duas entidades** (pessoal e
+empresa), cada uma com seu Drive e seu fechamento — comprovantes ficam nas **pastas
+existentes por projeto/entidade** (não há pasta universal; o mapeamento conta→pasta é
+aprendido e registrado no `FATOS.md`).
 
 Regras fixas: credencial bancária **nunca** entra no agente; agente que lê inbound de
 terceiros e move dinheiro é a combinação proibida. Evolução futura aceitável: Open Finance
@@ -141,7 +157,10 @@ temporariamente a gestão do wacli e do Bona. O Codex **entrega o que for pedido
 **auditor**: monitora e registra toda alteração feita pelo Claude, para rastreabilidade e
 recuperação. Dever recíproco do Claude: operar de forma auditável — mudança via git sempre
 que possível e ações relevantes registradas no workspace, para o log do Codex ter o que
-conferir.
+conferir. **Cadeia de contratos no host**: o contrato global canônico do dono (o AGENTS.md
+da raiz do usuário, onde a delegação está registrada) prevalece sobre tudo; o `CLAUDE.md`
+do workspace do Bona opera subordinado a ele e aponta para a mesma memória. Contratos em
+worktrees, backups, Lixeira e no legado OpenClaw **nunca** são fonte de regra vigente.
 
 ```bash
 # no Mac Mini, dentro do diretório do Bona:
@@ -151,6 +170,9 @@ claude --dangerously-load-development-channels plugin:whatsapp-claude-channel@wh
 
 # na sessão:
 /whatsapp-claude-channel:configure <DDI+DDD+numero, sem +>
+# IMPORTANTE (inventário 24/07): o Bona tem LINHA PRÓPRIA, distinta da linha pessoal do
+# dono. O pareamento é no número do Bona (a linha da ponte atual); a linha do dono, cujo
+# histórico o wacli registra, é fonte de memória — não é o canal do Bona.
 # WhatsApp → Aparelhos conectados → Conectar com número de telefone → digitar o código
 
 /whatsapp-claude-channel:access   # travar allowlist no seu número
