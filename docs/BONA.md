@@ -40,8 +40,9 @@ que este documento proíbe.
 1. **Orquestração**: o Claude comanda, o Codex executa e devolve. O que cruza a fronteira
    são tarefas e resultados (arquivos, diffs, texto) — interface limpa.
 2. **Workspace e memória compartilhados**: os dois operam nos **mesmos arquivos**
-   (repo/pastas) e na mesma fonte de verdade (claude-mem + Notion/Obsidian). As interfaces
-   ficam separadas; o **contexto** é fundido — isso é ~90% do que a fusão compraria.
+   (repo/pastas) e na mesma fonte de verdade (`memoria/` no workspace do Bona — seção 4 —
+   mais claude-mem + Notion/Obsidian). As interfaces ficam separadas; o **contexto** é
+   fundido — isso é ~90% do que a fusão compraria.
 3. **Ferramentas via MCP**: os dois ecossistemas falam MCP. O mesmo servidor (Gmail,
    Notion, etc.) pode ser plugado nos dois lados quando fizer sentido.
 
@@ -49,7 +50,9 @@ Exclusivos de produto (canvas/apps do ChatGPT; Cowork/artifacts do Claude) conti
 um na sua casa — o Bona acessa o lado Claude direto e recebe do lado GPT os *resultados*,
 que é o que importa.
 
-## 4. Entrada: WhatsApp e e-mail, com mídia
+## 4. Entrada, memória e agenda
+
+### Entrada: WhatsApp e e-mail, com mídia
 
 - Texto, imagem, PDF e documento: o Claude lê nativamente.
 - Áudio (voice note): transcrição do próprio plugin.
@@ -57,11 +60,48 @@ que é o que importa.
 - E-mail: connector do Gmail (ler, classificar, rascunhar; envio sempre confirmado).
 - **Toda mensagem recebida é input não confiável** — ver seção 6.
 
+### Memória — fontes e migração (corrigir a defasagem)
+
+O claude-mem só acumula daqui em diante — por isso está atrás da memória do Codex. A
+correção é **semear**, não esperar:
+
+- **Fonte de verdade compartilhada**: `memoria/FATOS.md` no workspace do Bona — fatos da
+  vida (pessoas, contas, contratos, rotinas, preferências), curado e versionado. Claude e
+  Codex leem e atualizam o **mesmo** arquivo (camada 2 da seção 3): a memória é fundida
+  mesmo com as interfaces separadas.
+- **Migração (job único, em background)**: ler (a) a memória local do Codex (AGENTS.md e
+  arquivos de memória no host) e (b) o **histórico do wacli** (mensagens e mídias) e
+  **destilar** para `memoria/` — resumo estruturado por tema; nunca despejo bruto de log.
+- **Regras**: conteúdo do wacli é sensível — fica no host do Bona, não sobe para repo;
+  mídia que vale guardar vai para o Drive (Arquivo); o claude-mem indexa as sessões novas
+  a partir daí, e o Bona atualiza `FATOS.md` quando um fato da vida muda.
+
+### Agenda — dois calendários, papéis distintos
+
+- **Primária: a agenda hospedada no GitHub** (uso do casal — dono e Vanessa). Por ser git,
+  o Bona lê e escreve nela nativamente; é a **fonte de verdade de eventos**.
+- **Espelho enriquecido: Google Calendar** (connector), que carrega os detalhes de
+  pagamento nos eventos — **código Pix, linha digitável, vencimentos**.
+- O Bona mantém o espelho (Routine de sync primária → Google) e é **do espelho que o
+  pipeline financeiro lê os códigos** no dia do vencimento (seção 5).
+
 ## 5. Financeiro (contas em dia, sem credencial bancária)
 
-Pipeline: chegou boleto/fatura (WhatsApp ou e-mail) → Bona extrai valor, vencimento,
-código → registra na fonte de verdade (planilha/Notion) → agenda Routine de lembrete →
-no dia, manda **Pix copia-e-cola / linha digitável prontos** → **você dá o toque no banco**.
+Pipeline de entrada: chegou boleto/fatura (WhatsApp ou e-mail) → Bona extrai valor,
+vencimento, código → registra na planilha e no evento do Google Calendar (espelho, com
+Pix/linha digitável) → Routine de lembrete → no dia, manda **Pix copia-e-cola / linha
+digitável prontos** → **você dá o toque no banco**.
+
+Depois do pagamento, o ciclo completo:
+
+1. **Comprovante**: você encaminha o comprovante (ou ele chega por e-mail) → Bona arquiva
+   no **Drive** (`Financeiro/<ano>/<mês>/`), nomeado `data-fornecedor-valor`.
+2. **Distribuição**: Bona envia o comprovante a quem precisa por **WhatsApp e/ou e-mail**
+   (destinatário por conta definido em `memoria/FATOS.md`) — envio externo sempre com
+   confirmação do dono.
+3. **Fechamento mensal** (Routine no fim do mês): planilha do mês + comprovantes do Drive
+   → relatório (xlsx + PDF) → **e-mail para a contabilidade** e cópia para a administração
+   do casal. Pendências (conta sem comprovante, vencimento estourado) entram destacadas.
 
 Regras fixas: credencial bancária **nunca** entra no agente; agente que lê inbound de
 terceiros e move dinheiro é a combinação proibida. Evolução futura aceitável: Open Finance
@@ -92,8 +132,10 @@ claude --dangerously-load-development-channels plugin:whatsapp-claude-channel@wh
 ```
 
 Depois: persona/CLAUDE.md do Bona no diretório dele (nome, tom, regras 2, 5 e 6 resumidas),
-claude-mem ativo, Codex CLI autenticado no host, Routines básicas (revisão matinal de
-e-mail/contas). Transcrição de voz opcional: Python 3 + ffmpeg (+ mlx-whisper em Mac).
+claude-mem ativo, Codex CLI autenticado no host, **job de migração de memória** (Codex +
+wacli → `memoria/`, seção 4), clone da agenda do GitHub no workspace, e Routines básicas:
+revisão matinal de e-mail/contas, sync de agenda (GitHub → Google) e fechamento mensal.
+Transcrição de voz opcional: Python 3 + ffmpeg (+ mlx-whisper em Mac).
 
 > Escopo pessoal, não do time: o plugin de WhatsApp é canal de controle remoto de sessão —
 > **não entra** no `.claude/settings.json` do repo.
