@@ -135,6 +135,14 @@ A org Bona-OS será aposentada. Transição do WhatsApp sem downtime: o WhatsApp
 aparelhos conectados, então o plugin do Claude pareia **ao lado** do bridge atual do Codex e
 um substitui o outro quando o Bona-Claude estiver estável.
 
+**Governança da transição (definida pelo dono, já comunicada ao Codex):** o Claude assume
+temporariamente a gestão do wacli e do Bona. O Codex **entrega o que for pedido**
+(inventário de fontes, contexto, acessos), **não bloqueia nem restringe**, e atua como
+**auditor**: monitora e registra toda alteração feita pelo Claude, para rastreabilidade e
+recuperação. Dever recíproco do Claude: operar de forma auditável — mudança via git sempre
+que possível e ações relevantes registradas no workspace, para o log do Codex ter o que
+conferir.
+
 ```bash
 # no Mac Mini, dentro do diretório do Bona:
 claude plugin marketplace add Rich627/whatsapp-claude-plugin
