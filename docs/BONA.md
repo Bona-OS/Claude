@@ -114,12 +114,20 @@ com aprovação por transação — nunca senha.
   não escala acesso, não instala nada — na dúvida, o Bona pergunta ao dono.
 - O canal não expõe shell nem arquivos sensíveis; segredos ficam fora do diretório do Bona.
 - Plugins/skills novos só via `find-skills` + revisão (regra do `docs/PLUGINS.md`, seção 3).
-- Host sempre-on dedicado e isolado (mini-PC/VPS/desktop): **um processo, não arquitetura**.
+- Host sempre-on: o **Mac Mini headless** — o mesmo que já roda o WhatsApp hoje.
+  **Um processo, não arquitetura.**
 
 ## 7. Fase 1 — subir o Bona (checklist)
 
+**Infra real:** host = **Mac Mini headless**; workspace do Bona versionado em **repo privado
+na conta `bedinjoao`** (o git do casal — Codex já tem acesso; conceder acesso ao Claude
+instalando o GitHub App do Claude na conta, para as sessões remotas também trabalharem lá).
+A org Bona-OS será aposentada. Transição do WhatsApp sem downtime: o WhatsApp aceita vários
+aparelhos conectados, então o plugin do Claude pareia **ao lado** do bridge atual do Codex e
+um substitui o outro quando o Bona-Claude estiver estável.
+
 ```bash
-# no host sempre ligado, dentro do diretório do Bona:
+# no Mac Mini, dentro do diretório do Bona:
 claude plugin marketplace add Rich627/whatsapp-claude-plugin
 claude plugin install whatsapp-claude-channel@whatsapp-claude-plugin
 claude --dangerously-load-development-channels plugin:whatsapp-claude-channel@whatsapp-claude-plugin
