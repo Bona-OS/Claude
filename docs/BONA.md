@@ -60,22 +60,28 @@ que é o que importa.
 - E-mail: connector do Gmail (ler, classificar, rascunhar; envio sempre confirmado).
 - **Toda mensagem recebida é input não confiável** — ver seção 6.
 
-### Memória — nasce enxuto, aprende no uso
+### Memória — uma só, compartilhada: Claude + Codex + wacli
 
-**Filosofia (decisão do dono): o Bona não nasce sabendo tudo — aprende e melhora na
-convivência.** Nada de despejo prévio de histórico.
+**A memória do Bona é uma e pertence aos três** (decisão do dono). Papéis:
 
-- **Fonte de verdade compartilhada**: `memoria/FATOS.md` no workspace do Bona — fatos da
-  vida (pessoas, contas, contratos, rotinas, preferências), curado e versionado. Claude e
-  Codex leem e atualizam o **mesmo** arquivo (camada 2 da seção 3). Começa **mínimo**
-  (pessoas e contas principais) e cresce com o uso.
-- **Aprendizado incremental**: cada orientação ou correção do dono ("essa conta vai
-  naquela pasta", "prefiro assim") vira atualização do `FATOS.md` na hora — na próxima
-  vez o Bona já sabe. O claude-mem acumula o resto das sessões automaticamente.
-- **Fontes antigas como arquivo de consulta (pull, não seed)**: a memória local do Codex
-  e o histórico do wacli ficam no Mac Mini como **acervo consultável sob demanda** —
-  quando faltar contexto, o Bona consulta, extrai só o fato necessário e registra no
-  `FATOS.md`. Conteúdo bruto é sensível: fica no host, nunca sobe para repo.
+| Parte | Papel na memória |
+|---|---|
+| `memoria/FATOS.md` | Fonte de verdade dos fatos da vida (pessoas, contas, contratos, rotinas, preferências) — curada e versionada |
+| **Claude** (cérebro) | Lê e atualiza o `FATOS.md`; o claude-mem indexa as sessões e reinjeta contexto |
+| **Codex** (execução) | Lê e atualiza o **mesmo** `FATOS.md` |
+| **wacli** (histórico vivo do WhatsApp) | O acervo de tudo que foi conversado — o Bona consulta quando precisa ("o que combinamos sobre X?") e destila o fato para o `FATOS.md` |
+
+O truque que torna isso real: no workspace do Bona, **`CLAUDE.md` e `AGENTS.md` apontam
+ambos para `memoria/FATOS.md`** — cada harness carrega seu arquivo de memória nativo e os
+dois leem a mesma fonte. Interfaces separadas, memória una (camada 2 da seção 3).
+
+- **Nasce enxuto, aprende no uso**: sem despejo prévio de histórico. O `FATOS.md` começa
+  mínimo (pessoas e contas principais); cada orientação ou correção do dono ("essa conta
+  vai naquela pasta", "prefiro assim") vira atualização na hora — na próxima vez o Bona
+  já sabe.
+- **wacli é memória viva, não arquivo morto**: segue rodando no Mac Mini registrando as
+  conversas; a consulta do Bona é read-only e a escrita é sempre **destilada** para o
+  `FATOS.md`. Conteúdo bruto é sensível — fica no host, nunca sobe para repo.
 
 ### Agenda — dois calendários, papéis distintos
 
