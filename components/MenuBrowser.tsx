@@ -14,6 +14,7 @@ import {
 import { pizzaPriceCents } from "@/lib/cart";
 import { formatBRL } from "@/lib/format";
 import { useCart } from "./CartProvider";
+import Reveal from "./Reveal";
 
 function PizzaCard({ pizza, flavors }: { pizza: Pizza; flavors: Pizza[] }) {
   const { addPizza } = useCart();
@@ -116,41 +117,43 @@ export default function MenuBrowser() {
   const salgadas = PIZZAS;
   const doces = SWEET_PIZZAS;
 
+  const sections: { id: string; index: string; title: string; sub?: string; cards: React.ReactNode }[] = [
+    {
+      id: "pizzas-salgadas",
+      index: "01",
+      title: "Pizzas Salgadas",
+      sub: "Monte meio a meio combinando dois sabores — cobramos o de maior valor.",
+      cards: salgadas.map((p) => <PizzaCard key={p.id} pizza={p} flavors={salgadas} />),
+    },
+    {
+      id: "pizzas-doces",
+      index: "02",
+      title: "Pizzas Doces",
+      cards: doces.map((p) => <PizzaCard key={p.id} pizza={p} flavors={doces} />),
+    },
+    ...SIMPLE_SECTIONS.map(({ key, title }, i) => {
+      const list = ITEMS.filter((it) => it.category === key);
+      return {
+        id: key,
+        index: String(3 + i).padStart(2, "0"),
+        title,
+        cards: list.map((it) => <ItemCard key={it.id} item={it} />),
+      };
+    }).filter((s) => (s.cards as React.ReactNode[]).length > 0),
+  ];
+
   return (
     <div className="menu">
-      <section id="pizzas-salgadas" className="menu-section">
-        <h2>Pizzas Salgadas</h2>
-        <p className="section-sub">Monte meio a meio combinando dois sabores — cobramos o de maior valor.</p>
-        <div className="grid">
-          {salgadas.map((p) => (
-            <PizzaCard key={p.id} pizza={p} flavors={salgadas} />
-          ))}
-        </div>
-      </section>
-
-      <section id="pizzas-doces" className="menu-section">
-        <h2>Pizzas Doces</h2>
-        <div className="grid">
-          {doces.map((p) => (
-            <PizzaCard key={p.id} pizza={p} flavors={doces} />
-          ))}
-        </div>
-      </section>
-
-      {SIMPLE_SECTIONS.map(({ key, title }) => {
-        const list = ITEMS.filter((i) => i.category === key);
-        if (list.length === 0) return null;
-        return (
-          <section key={key} id={key} className="menu-section">
-            <h2>{title}</h2>
-            <div className="grid">
-              {list.map((i) => (
-                <ItemCard key={i.id} item={i} />
-              ))}
-            </div>
-          </section>
-        );
-      })}
+      {sections.map((s) => (
+        <section key={s.id} id={s.id} className="menu-section">
+          <Reveal className="menu-head">
+            <p className="section-index">{s.index} — Cardápio</p>
+            <h2 className="section-title">{s.title}</h2>
+            {s.sub && <p className="section-sub">{s.sub}</p>}
+          </Reveal>
+          <div className="grid">{s.cards}</div>
+        </section>
+      ))}
     </div>
   );
 }
