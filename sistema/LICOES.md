@@ -1,7 +1,7 @@
 # Lições da v1 (setembro/2026)
 
 Por que o Manual v0 é do jeito que é. Cada lição veio de um problema observado
-(fonte: `docs/AUDITORIA-2026-09-26.md` e páginas do Notion lidas em 25–26/09).
+(fonte: auditoria de 26/09, guardada em página privada do Notion, e páginas do Notion lidas em 25–26/09).
 
 | # | O que aconteceu | Lição → regra no Manual |
 |---|---|---|

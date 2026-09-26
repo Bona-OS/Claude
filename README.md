@@ -12,7 +12,6 @@ entidades, pendências, compromissos, dinheiro).
 | [`sistema/CARTAO.md`](sistema/CARTAO.md) | Resumo versionado do Manual para colar nas instruções de cada plataforma |
 | [`CLAUDE.md`](CLAUDE.md) | Instrução de entrada para sessões do Claude |
 | [`AGENTS.md`](AGENTS.md) | Instrução de entrada para Codex e outros agentes |
-| [`docs/AUDITORIA-2026-09-26.md`](docs/AUDITORIA-2026-09-26.md) | Retrato do sistema v1 que motivou a mudança |
 
 Mudança na configuração = pull request aprovado pelo João.
 
