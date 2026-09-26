@@ -1,26 +1,17 @@
-# Bona — sistema pessoal de Chief of Staff do João
+# Bona — sistema de IA do João
 
-Repositório de código e configuração do **Bona**: o sistema multiagente que recebe pedidos,
-áudios, documentos e ideias do João e devolve trabalho útil, verificado e com continuidade.
+Este repositório é **a configuração do trabalho de IA**. O Notion guarda só dados (frentes,
+entidades, pendências, compromissos, dinheiro).
 
-> A FotoRestaura (restauração de fotos via WhatsApp) foi removida deste repositório em 26/09/2026.
-> O código continua no histórico do git (commit `32f6965`).
-
-## Fonte de verdade
-
-O **estado** do sistema vive no Notion, não aqui. Este repositório guarda apenas o que é código,
-configuração e protocolo.
-
-| O quê | Onde |
+| Arquivo | O que é |
 |---|---|
-| Arquitetura vigente | Notion › Gestão do Notion › *Arquitetura Consigliere v2* (`3e45edb2cfd581ae8400fc4933389962`) |
-| Porta de entrada e regras | *Guia 48* (`3e65edb2cfd581f5a7c2e78268f85075`) → Playbooks |
-| Discussão técnica e recibos | *Integração das plataformas* (`3d75edb2cfd5814eb6c8c8639ebe3b8b`) + Work Log |
-| Originais | Google Drive (com SHA-256) |
-| Histórico bruto | Acervo WhatsApp/WACLI → vault Obsidian |
+| [`sistema/MANUAL.md`](sistema/MANUAL.md) | A configuração inteira: papéis, rotinas, regras. Limite de 150 linhas |
+| [`sistema/LICOES.md`](sistema/LICOES.md) | Por que o manual é assim (lições da v1) |
+| [`sistema/MIGRACAO.md`](sistema/MIGRACAO.md) | Como tirar a configuração antiga do Notion sem quebrar nada |
+| [`mini/`](mini/) | Executor Claude no Mac Mini (`bona-claude-worker`) e roteiro de instalação |
+| [`CLAUDE.md`](CLAUDE.md) | Instrução de entrada para sessões do Claude |
+| [`docs/AUDITORIA-2026-09-26.md`](docs/AUDITORIA-2026-09-26.md) | Retrato do sistema v1 que motivou a mudança |
 
-## Conteúdo
+Mudança na configuração = pull request aprovado pelo João.
 
-- [`CLAUDE.md`](CLAUDE.md) — regras que toda sessão do Claude segue ao trabalhar para o Bona.
-- [`docs/INTEGRACAO.md`](docs/INTEGRACAO.md) — como Grok, Grokbot e Claude se dividem e se conectam.
-- [`docs/AUDITORIA-2026-09-26.md`](docs/AUDITORIA-2026-09-26.md) — auditoria de sistema, conhecimento, conectores, loops, graphs e playbooks.
+> A FotoRestaura foi removida em 26/09/2026 (histórico no commit `32f6965`).

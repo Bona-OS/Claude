@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# bona-claude-worker — executor Claude no Mac Mini, mesmo contrato do bona-codex-worker.
+#   route                  → diz se o executor está pronto
+#   delegate <pedido.json> → aceita o pedido e roda em segundo plano
+#   status <request_id>    → accepted | running | FEITO | BLOQUEIO: motivo
+# Pedido: {"request_id","from","goal","done_when","constraints","report_to"}
+# Autenticação: CLAUDE_CODE_OAUTH_TOKEN (assinatura, via `claude setup-token`). Nunca API key.
+set -euo pipefail
+
+REPO="${BONA_REPO:-$HOME/Bona-OS/Claude}"
+STATE="${BONA_STATE:-$HOME/.bona/claude}"
+# Capacidade mínima: sem ferramenta de envio, o «só rascunho» vale por construção.
+ALLOWED="${BONA_ALLOWED_TOOLS:-Read Glob Grep mcp__notion}"
+
+load_token() {
+  if [[ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
+    CLAUDE_CODE_OAUTH_TOKEN="$(security find-generic-password -s bona-claude-oauth -w 2>/dev/null || true)"
+    export CLAUDE_CODE_OAUTH_TOKEN
+  fi
+  [[ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]]
+}
+
+cmd_route() {
+  command -v claude >/dev/null || { echo "BLOQUEIO: claude não instalado"; exit 1; }
+  load_token || { echo "BLOQUEIO: token OAuth ausente (rodar claude setup-token)"; exit 1; }
+  [[ -f "$REPO/sistema/MANUAL.md" ]] || { echo "BLOQUEIO: repositório ausente em $REPO"; exit 1; }
+  echo "pronto: $(claude --version)"
+}
+
+cmd_delegate() {
+  local file="$1" id dir
+  id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["request_id"])' "$file")"
+  [[ "$id" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "BLOQUEIO: request_id inválido"; exit 1; }
+  dir="$STATE/$id"
+  if [[ -d "$dir" ]]; then echo "já recebido: $(cat "$dir/status")"; exit 0; fi  # idempotente
+  load_token || { echo "BLOQUEIO: token OAuth ausente"; exit 1; }
+  mkdir -p "$dir"; cp "$file" "$dir/pedido.json"; echo accepted > "$dir/status"
+  (
+    cd "$REPO"; git pull -q --ff-only || true
+    echo running > "$dir/status"
+    prompt="Siga sistema/MANUAL.md. Execute o pedido abaixo. Termine com uma linha final
+exatamente 'FEITO' ou 'BLOQUEIO: <motivo>'.
+$(cat "$dir/pedido.json")"
+    # shellcheck disable=SC2086
+    if claude -p "$prompt" --output-format json --allowedTools $ALLOWED >"$dir/resultado.json" 2>"$dir/erro.log"; then
+      last="$(python3 -c 'import json,sys; r=json.load(open(sys.argv[1])).get("result","").strip().splitlines(); print(r[-1] if r else "")' "$dir/resultado.json")"
+      [[ "$last" == FEITO || "$last" == BLOQUEIO:* ]] || last="BLOQUEIO: resposta sem linha final"
+      echo "$last" > "$dir/status"
+    else
+      echo "BLOQUEIO: claude saiu com erro (ver erro.log)" > "$dir/status"
+    fi
+  ) >/dev/null 2>&1 &
+  echo accepted
+}
+
+cmd_status() {
+  local f="$STATE/$1/status"
+  [[ -f "$f" ]] && cat "$f" || echo "desconhecido"
+}
+
+case "${1:-}" in
+  route) cmd_route ;;
+  delegate) cmd_delegate "${2:?pedido.json}" ;;
+  status) cmd_status "${2:?request_id}" ;;
+  *) echo "uso: $0 route | delegate <pedido.json> | status <request_id>"; exit 2 ;;
+esac
