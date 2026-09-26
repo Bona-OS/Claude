@@ -1,0 +1,8 @@
+# segredos
+.env
+.env*
+*.pem
+
+# sistema
+.DS_Store
+node_modules/
