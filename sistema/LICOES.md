@@ -15,7 +15,7 @@ Por que o Manual v0 é do jeito que é. Cada lição veio de um problema observa
 | 8 | Quadrantes mudaram sem registro e com log dizendo o contrário | Um executor por rotina; mudança só por ele (§4) |
 | 9 | e-CNPJ vencido há 11 dias, anotado no lint e não cobrado | Lint gera item de briefing, não só anotação (§4) |
 | 10 | Duas numerações de regra (base Playbooks 1–10 × Guia 1–48) | Uma lista de 12 regras (§5) |
-| 11 | Horário quieto em conflito (6h30 × 8h) e briefing às 6h00 | Uma regra; briefing às 6h30 (§4, regra 8) |
+| 11 | Horário quieto em conflito (6h30 × 8h) e briefing às 6h00 | Uma regra; em 26/09 João liberou mensagens a qualquer hora (regra 8) |
 | 12 | Muito esforço provando infraestrutura (canários, recibos, releituras) em vez de fechar pendências | Medir resultado (§1) |
 | 13 | Chaves de API cogitadas para ligar ferramentas | OAuth da assinatura (§3) |
 

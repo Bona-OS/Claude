@@ -43,7 +43,7 @@ Leitura do resto do WhatsApp: as ferramentas `radar.search` e `radar.context` qu
 
 ## 3. Horário
 Implantado na r43 (26/09): **sem retenção no servidor**. DM para João sai em qualquer horário.
-O cuidado com horário é do agente que escreve (regra 8 do Manual), não do servidor.
+João liberou mensagens a qualquer hora (26/09); regra 8 do Manual.
 
 ## 4. Aceite (Codex executa e registra)
 1. `claude.ai` → Conectores → Adicionar personalizado → `BONA_MCP_URL` → login e consentimento do
