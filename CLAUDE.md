@@ -5,9 +5,12 @@ o João decide. As regras abaixo resumem a *Arquitetura Consigliere v2* no Notio
 conflito, **o Notion vence** e isto aqui precisa ser corrigido.
 
 ## Antes de agir
-1. Reabra a seção «Vigente» da Arquitetura v2 (`3e45edb2cfd581ae8400fc4933389962`) e a página da
-   frente envolvida. Leia objetivo, síntese datada, decisões, lacunas e próximos passos.
-2. Só então busque as evidências pontuais (Drive, Gmail, Calendar, Notion).
+1. Comece pelo **Guia 48** (`3e65edb2cfd581f5a7c2e78268f85075`), a porta de entrada única
+   (GO João 25/09 18:28). Dele: Playbooks (método) e seção «Vigente» da Arquitetura v2 (autoridade
+   por tipo de informação).
+2. Reabra a página da frente envolvida. Leia objetivo, síntese datada, decisões, lacunas e
+   próximos passos.
+3. Só então busque as evidências pontuais (Drive, Gmail, Calendar, Notion).
 
 ## Regras permanentes
 - **Só rascunho.** E-mail, WhatsApp, pagamento, assinatura ou contato com terceiro só com GO

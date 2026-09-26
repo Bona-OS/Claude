@@ -14,7 +14,7 @@ configuração e protocolo.
 | O quê | Onde |
 |---|---|
 | Arquitetura vigente | Notion › Gestão do Notion › *Arquitetura Consigliere v2* (`3e45edb2cfd581ae8400fc4933389962`) |
-| Método de trabalho | Topo dos *Playbooks* + *Guia 48* (`3e65edb2cfd581f5a7c2e78268f85075`) |
+| Porta de entrada e regras | *Guia 48* (`3e65edb2cfd581f5a7c2e78268f85075`) → Playbooks |
 | Discussão técnica e recibos | *Integração das plataformas* (`3d75edb2cfd5814eb6c8c8639ebe3b8b`) + Work Log |
 | Originais | Google Drive (com SHA-256) |
 | Histórico bruto | Acervo WhatsApp/WACLI → vault Obsidian |
@@ -23,3 +23,4 @@ configuração e protocolo.
 
 - [`CLAUDE.md`](CLAUDE.md) — regras que toda sessão do Claude segue ao trabalhar para o Bona.
 - [`docs/INTEGRACAO.md`](docs/INTEGRACAO.md) — como Grok, Grokbot e Claude se dividem e se conectam.
+- [`docs/AUDITORIA-2026-09-26.md`](docs/AUDITORIA-2026-09-26.md) — auditoria de sistema, conhecimento, conectores, loops, graphs e playbooks.
