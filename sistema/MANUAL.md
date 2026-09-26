@@ -76,3 +76,5 @@ Sem parede de texto, sem jargão de agente, sem repetir o que não mudou.
 
 ## 7. Como mudar este manual
 Pull request neste repositório. João aprova. O PR diz qual problema real motivou a mudança.
+Toda mudança atualiza também o [`CARTAO.md`](CARTAO.md) (sobe a versão) e o agente que mudou
+avisa o João para recolar o cartão nas plataformas (Claude, ChatGPT, Grok, Grokbot, Codex).

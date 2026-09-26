@@ -9,7 +9,9 @@ entidades, pendências, compromissos, dinheiro).
 | [`sistema/LICOES.md`](sistema/LICOES.md) | Por que o manual é assim (lições da v1) |
 | [`sistema/MIGRACAO.md`](sistema/MIGRACAO.md) | Como tirar a configuração antiga do Notion sem quebrar nada |
 | [`mini/`](mini/) | Executor Claude no Mac Mini (`bona-claude-worker`) e roteiro de instalação |
+| [`sistema/CARTAO.md`](sistema/CARTAO.md) | Resumo versionado do Manual para colar nas instruções de cada plataforma |
 | [`CLAUDE.md`](CLAUDE.md) | Instrução de entrada para sessões do Claude |
+| [`AGENTS.md`](AGENTS.md) | Instrução de entrada para Codex e outros agentes |
 | [`docs/AUDITORIA-2026-09-26.md`](docs/AUDITORIA-2026-09-26.md) | Retrato do sistema v1 que motivou a mudança |
 
 Mudança na configuração = pull request aprovado pelo João.
