@@ -20,8 +20,9 @@ falar com o João.
 - Registrar o Claude como cliente (o claude.ai usa registro dinâmico; se o servidor não aceitar,
   criar um cliente manual).
 - Callback do claude.ai: `https://claude.ai/api/mcp/auth_callback` (conferir na tela de conexão).
-- Escopos do Claude: `radar:read` + `dm_joao:send` (novo). **Sem** `codex:delegate` e sem escopo
-  de envio a terceiros.
+- Escopos do Claude (autorização do João em 26/09): `radar:read` + `dm_joao:send` (novo) +
+  `codex:delegate` (controlar o Codex pelos `codex.worker_*` existentes) + envio a terceiros **pela
+  trava humana existente** (rascunho → aprovação do João vinculada ao destinatário e ao hash).
 - Consentimento dado pelo João na tela do servidor.
 
 ## 2. Ferramentas novas (só 3)
@@ -31,6 +32,9 @@ falar com o João.
 | `whatsapp.dm_joao.read(since?, limit?)` | mensagens da DM Bona (as duas direções), mais novas primeiro | só leitura; inclui transcrição de áudio quando houver |
 | `whatsapp.dm_joao.status(client_msg_id)` | `queued` · `sent` · `delivered` · `failed: motivo` | — |
 
+Envio a outros números: pelas ferramentas de rascunho e aprovação que já existem (a mesma trava do
+Grok). O Claude prepara, o João aprova, o servidor envia. Sem aprovação, não sai.
+
 Leitura do resto do WhatsApp: as ferramentas `radar.search` e `radar.context` que já existem.
 
 ## 3. Horário quieto no servidor
@@ -39,12 +43,13 @@ a janela abrir. Exceção só com `urgent=true` + motivo (boleto que vence hoje)
 
 ## 4. Aceite (Codex executa e registra)
 1. `claude.ai` → Conectores → Adicionar personalizado → `BONA_MCP_URL` → login e consentimento do
-   João. As 3 ferramentas novas e `radar.*` aparecem; `codex.*` e o envio a terceiros **não**.
+   João (o Codex pode fazer isso por Computer Use na sessão do João no Mini). Aparecem: as 3
+   ferramentas novas, `radar.*`, `codex.worker_*` e as de rascunho/aprovação para terceiros.
 2. Numa sessão do Claude: `dm_joao.send("Teste Claude 1")` → chega no 3008 vindo do 1175;
    `status` = `delivered`.
 3. João responde na DM → `dm_joao.read` devolve a resposta.
 4. Mesmo `client_msg_id` duas vezes → uma mensagem só.
-5. Tentativa de destino diferente → impossível pela interface (não há parâmetro).
+5. `dm_joao.send` não aceita destino. Envio a terceiro sem aprovação do João → recusado.
 6. Chamada às 23h sem `urgent` → `queued`; sai às 6h30.
 
 ## 5. Responder quando o João escreve (fase 2)
