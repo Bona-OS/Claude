@@ -1,5 +1,8 @@
 # Conector WhatsApp do Claude — extensão do Bona Memory MCP
 
+**Estado (26/09):** release r43 ativa no Mini. 495 testes MCP + 10 da outbox passaram. Aceites 4, 5
+e 6 aprovados; 1–3 aguardam o consentimento do João e o teste real na DM.
+
 **Decisão:** não criar um servidor novo. O Bona Memory MCP no Mini já tem OAuth com escopos, 33
 ferramentas, leitura do 3008 (WACLI) e a ponte 1175 (Baileys) com trava humana para envio. O
 Claude entra como **mais um cliente OAuth** desse servidor, e o servidor ganha só o que falta:
@@ -20,9 +23,10 @@ falar com o João.
 - Registrar o Claude como cliente (o claude.ai usa registro dinâmico; se o servidor não aceitar,
   criar um cliente manual).
 - Callback do claude.ai: `https://claude.ai/api/mcp/auth_callback` (conferir na tela de conexão).
-- Escopos do Claude (autorização do João em 26/09): `radar:read` + `dm_joao:send` (novo) +
+- Escopos do Claude (autorização do João em 26/09): `whatsapp:read` (inclui `radar.*`) + `dm_joao:send` (novo) +
   `codex:delegate` (controlar o Codex pelos `codex.worker_*` existentes) + envio a terceiros **pela
-  trava humana existente** (rascunho → aprovação do João vinculada ao destinatário e ao hash).
+  trava humana existente** (rascunho → aprovação do João vinculada ao destinatário e ao hash),
+  escopo `whatsapp:send_gated`, portado para o servidor OAuth. Cliente fixo no Auth0.
 - Consentimento dado pelo João na tela do servidor.
 
 ## 2. Ferramentas novas (só 3)
@@ -37,9 +41,9 @@ Grok). O Claude prepara, o João aprova, o servidor envia. Sem aprovação, não
 
 Leitura do resto do WhatsApp: as ferramentas `radar.search` e `radar.context` que já existem.
 
-## 3. Horário quieto no servidor
-`dm_joao.send` fora da janela permitida (antes das 6h30; noite das crianças) → fica `queued` até
-a janela abrir. Exceção só com `urgent=true` + motivo (boleto que vence hoje), registrado no log.
+## 3. Horário
+Implantado na r43 (26/09): **sem retenção no servidor**. DM para João sai em qualquer horário.
+O cuidado com horário é do agente que escreve (regra 8 do Manual), não do servidor.
 
 ## 4. Aceite (Codex executa e registra)
 1. `claude.ai` → Conectores → Adicionar personalizado → `BONA_MCP_URL` → login e consentimento do
@@ -50,7 +54,7 @@ a janela abrir. Exceção só com `urgent=true` + motivo (boleto que vence hoje)
 3. João responde na DM → `dm_joao.read` devolve a resposta.
 4. Mesmo `client_msg_id` duas vezes → uma mensagem só.
 5. `dm_joao.send` não aceita destino. Envio a terceiro sem aprovação do João → recusado.
-6. Chamada às 23h sem `urgent` → `queued`; sai às 6h30.
+6. Chamada às 23h → sai na hora (sem retenção, r43).
 
 ## 5. Responder quando o João escreve (fase 2)
 O conector deixa o Claude **falar e ler**. Para o Claude **responder sozinho** quando o João
