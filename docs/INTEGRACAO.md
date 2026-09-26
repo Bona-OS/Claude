@@ -56,6 +56,15 @@ João ──conversa──► Grok (mesa)
 | Radar e-mail C1 (8h–20h) | o Claude já tem Gmail + Notion; tira carga do CoS |
 | Briefing 06h (rascunho) | o Claude monta o gancho; o CoS só revisa e entrega |
 
+## Trabalho anterior neste repositório (outras branches)
+- `claude/grok-mcp-media-connector-vcdlu3`: servidor MCP `grok-media` que dá ao Claude as
+  ferramentas de imagem, vídeo e fala do Grok pela API da xAI. É a base natural do item 3
+  (acrescentar uma ferramenta `grok.ask`). Lembrete registrado lá: a assinatura SuperGrok **não**
+  inclui a API; a chave vem do console.x.ai.
+- `claude/codex-claude-code-integration-dlFaf`: relay Nuvem → Drive → Mac Mini para o Codex
+  disparar o Claude Code local (maio/2026, aprovado só como relay manual). É anterior à
+  Arquitetura v2. Reaproveitar apenas se não criar uma segunda fila.
+
 ## Pendências para decidir
 1. GO para adicionar o destino `claude` ao Bona Memory MCP (código no Mac Mini).
 2. GO para migrar o Lint das 19h para uma Rotina do Claude.
