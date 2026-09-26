@@ -21,6 +21,24 @@ Proposta de 26/09/2026. **Ainda não implantada.** Precisa de GO do João e de r
   próprias ferramentas, grava o recibo no Notion e devolve `FEITO` ou `BLOQUEIO`. Também assume as
   rotinas agendadas que hoje consomem créditos de outros.
 
+## Princípio de autenticação: OAuth da assinatura, não chave de API
+
+Decisão de João (26/09): a conexão usa **OAuth da assinatura** de cada ferramenta, para consumir
+os limites de uso já pagos. Chave de API gera cobrança à parte, por token.
+
+| Quem | Como autentica | Consome |
+|---|---|---|
+| Grok (app) | Já é cliente MCP do Bona Memory via OAuth (escopo `codex:delegate` concedido) | Assinatura SuperGrok |
+| Grokbot | Sessão própria | Assinatura do Grokbot |
+| Codex no Mini | Login ChatGPT | Assinatura ChatGPT |
+| Claude no Mini | `claude setup-token` → `CLAUDE_CODE_OAUTH_TOKEN` (login da assinatura Claude, sem API key) | Assinatura Claude |
+| Rotinas do Claude na nuvem | Conta claude.ai do João | Assinatura Claude |
+
+**Consequência para a direção das chamadas:** o Grok sempre **chama** (é o cliente MCP). Claude e
+Codex são **executores** atrás do Bona Memory MCP. O caminho Claude → Grok só existe por API
+paga, porque a SuperGrok não inclui API. Por isso ele fica fora do desenho, e o Claude devolve o
+resultado pelo Notion, onde o Grok lê.
+
 ## Como conectar (sem criar fila nova)
 
 ```
@@ -30,22 +48,26 @@ João ──conversa──► Grok (mesa)
               Bona Memory MCP (já existe no Grok, já tem codex.worker_delegate)
                      │ novo roteamento: destino = claude
                      ▼
-            Rotina Claude (gatilho por API) ──► Notion / Gmail (rascunho) / Drive / Calendar
+   bona-claude-worker (Mini, OAuth da assinatura) ──► Notion / Gmail (rascunho) / Drive / Calendar
                      │
                      ▼
          Recibo na página da frente + Work Log ──► CoS lê ──► João (só se precisar de GO)
 ```
 
 1. **Grok → Claude.** Adicionar ao Bona Memory MCP um destino `claude`, ao lado de `codex`
-   (mesmos `route` / `delegate` / `status`). O `delegate` dispara uma Rotina do Claude Code por
-   API, com o pedido no corpo. O mesmo contrato do pedido da Bridge CoS↔Codex:
+   (mesmos `route` / `delegate` / `status`). O `delegate` chama um `bona-claude-worker` no Mini,
+   espelho do `bona-codex-worker`, que roda `claude -p` com o `CLAUDE_CODE_OAUTH_TOKEN` da
+   assinatura. O pedido segue o mesmo contrato da Bridge CoS↔Codex:
    `request_id`, `from`, `goal`, `done_when`, `constraints`, `report_to`.
+   No Mini, o Claude também alcança o WACLI e o Obsidian; na nuvem, não.
 2. **Grokbot → Claude.** O mesmo `delegate`. O CoS deixa de executar tarefas longas e passa a
    conferir o recibo (aceite ou ajuste), como já faz com o Codex.
-3. **Claude → Grok (opcional).** Um MCP pequeno `grok.ask` usando a API da xAI, para o Claude
-   pedir segunda opinião ou análise longa ao Grok. Exige chave de API da xAI, com cobrança própria
-   e sem acesso à memória do app Grok.
-4. **Retorno.** Sempre pelo Notion (recibo na frente) e, quando o João precisar saber, por um
+3. **Rotinas agendadas (Lint 19h etc.).** Rodam como Rotinas do Claude na conta claude.ai do
+   João, que também consomem a assinatura, e usam os conectores já ligados (Notion, Gmail, Drive,
+   Calendar). Não precisam do Mini.
+4. **Claude → Grok: descartado.** Só seria possível por API xAI paga (a SuperGrok não inclui API).
+   O Grok lê o resultado no Notion.
+5. **Retorno.** Sempre pelo Notion (recibo na frente) e, quando o João precisar saber, por um
    **rascunho** no Outbox da DM Bona 1175. Nunca envio direto.
 
 ## Primeiras rotinas a migrar para o Claude
@@ -68,4 +90,5 @@ João ──conversa──► Grok (mesa)
 ## Pendências para decidir
 1. GO para adicionar o destino `claude` ao Bona Memory MCP (código no Mac Mini).
 2. GO para migrar o Lint das 19h para uma Rotina do Claude.
-3. Se o Claude deve consultar o Grok por API (item 3), e quem fornece a chave xAI.
+3. João rodar `claude setup-token` no Mini, uma vez, logado na assinatura Claude, e guardar o
+   token no Keychain. É passo humano, porque o login é dele.
