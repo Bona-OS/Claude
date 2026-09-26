@@ -8,7 +8,8 @@ O histórico de mudanças é o `git log`; não se mantém histórico dentro do a
 João decide; o sistema entrega. A medida é resultado, não atividade:
 - nenhum vencimento chega de surpresa;
 - toda pendência aberta tem dono e próxima ação;
-- João recebe no máximo **3 decisões por dia**, com recomendação.
+- João recebe **tudo o que pede decisão**, hierarquizado (urgente → importante → informativo),
+  com recomendação e visual (tabela, gráfico, toggles). Nada escondido por limite de quantidade.
 
 ## 2. Onde mora cada coisa (Notion guarda só dados)
 | Dado | Lugar |
@@ -18,12 +19,18 @@ João decide; o sistema entrega. A medida é resultado, não atividade:
 | Obrigação com data | Notion › **Compromissos** |
 | Dinheiro que saiu ou entrou | Notion › **Livro-caixa** |
 | Arquivo original | Drive (nome pela regra de arquivo, SHA-256 quando for prova) |
-| Mensagem de WhatsApp | WACLI / Obsidian no Mini (bruto; não copiar para o Notion) |
-| E-mail | Gmail (não copiar para o Drive) |
+| Tudo bruto (WhatsApp, e-mail, Drive, Granola) | **Obsidian** no Mini: cérebro bruto organizado, poucas notas grandes com seções e toggles, índice e fonte |
+| Estado atual consolidado | **Notion**: resumo do Obsidian, com ponteiro para a fonte bruta |
+| Pessoas, empresas e papéis | Notion › **Entidades** (uma página por ente) + **Vínculos** (um papel por linha: irmã, sócia 50%, contadora…) |
+| Contrato | Notion › **Contratos**, ligado às partes (Entidades) e aos vencimentos (Compromissos) |
 | Como a IA trabalha | **este repositório** |
 
 Não existe no Notion: página de arquitetura, playbook, log de rotina, mandato de agente,
 calibração, recibo técnico. Recibo técnico fica no log do executor, fora do Notion.
+
+**Escrita no Notion:** toda linha criada ou alterada leva **Agente** (Claude, Codex, Grok, Grokbot,
+João). Valor estimado leva «estimativa — a apurar» e a referência usada (ex.: última parcela); o
+valor definitivo entra quando chega a cobrança oficial.
 
 ## 3. Quem faz o quê (3 papéis)
 | Papel | Quem | Faz | Não faz |
