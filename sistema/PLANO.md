@@ -23,7 +23,7 @@ Lá o Claude executa (terminal, vault, launchd, Bona Memory local) e chama Grok 
 ferramentas, não como intermediários. Condições para mudar a sede: permissões da sessão do Mini
 definidas pelo João (sem classificador «auto»); Notion e GitHub configurados como MCP no Mini
 (Gmail/Drive já existem via `gog`); este plano no repo. Nuvem continua para conversa, voz, Notion,
-Gmail e Drive quando o João está fora.
+Gmail e Drive quando o João está fora. Passo a passo em [`../mini/MIGRACAO-SEDE.md`](../mini/MIGRACAO-SEDE.md).
 
 ## 4. Um papel por plataforma (tudo já pago; nada ocioso)
 | Plataforma | Papel único | Chamado por |

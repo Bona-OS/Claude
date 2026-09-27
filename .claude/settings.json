@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "mcp__Bona_Memory__*",
+      "mcp__github__*",
+      "mcp__Notion__*",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+      "Bash(launchctl print *)",
+      "Bash(launchctl list *)",
+      "Bash(grok *)",
+      "Bash(codex *)",
+      "Bash(claude *)",
+      "Bash(gog *)"
+    ],
+    "deny": [
+      "Read(**/auth.json)",
+      "Read(**/*.pem)",
+      "Read(**/.env*)",
+      "Bash(git push --force*)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}
