@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>ai.bona.remote-control</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__HOME__/.local/bin/bona-remote-control</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>BONA_RC_DIR</key><string>__DIR__</string>
+    <key>HOME</key><string>__HOME__</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <!-- Caiu (rede fora > 10 min, sono, atualização do claude): sobe de novo. -->
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <!-- Sem isto o macOS congela o processo quando o Mac fica ocioso (tela apagada). -->
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/bona/remote-control.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/bona/remote-control.log</string>
+</dict>
+</plist>

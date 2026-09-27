@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Instala (ou reinstala) o Remote Control permanente do Mini. Idempotente; rodar no Mini:
+#   ~/Bona-OS/Claude/mini/remote-control/instalar [pasta-das-sessões]
+# Desfazer: ~/Bona-OS/Claude/mini/remote-control/instalar --remover
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+LABEL=ai.bona.remote-control
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+DOMAIN="gui/$(id -u)"
+
+if [[ "${1:-}" == --remover ]]; then
+  launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+  rm -f "$PLIST" "$HOME/.local/bin/bona-remote-control"
+  echo "removido"; exit 0
+fi
+
+DIR="${1:-$HOME/Bona-OS/Claude}"
+[[ -d "$DIR" ]] || { echo "BLOQUEIO: pasta ausente: $DIR"; exit 1; }
+DIR="$(cd "$DIR" && pwd)"
+
+mkdir -p "$HOME/.local/bin" "$HOME/Library/LaunchAgents" "$HOME/Library/Logs/bona"
+install -m 755 "$HERE/bona-remote-control" "$HOME/.local/bin/bona-remote-control"
+sed -e "s#__HOME__#$HOME#g" -e "s#__DIR__#$DIR#g" "$HERE/$LABEL.plist" > "$PLIST"
+plutil -lint "$PLIST" >/dev/null
+
+# Sessões de terminal (`claude` interativo) também entram no Remote Control e, ao contrário do
+# modo servidor, reconectam sozinhas depois de sono ou queda de rede.
+python3 - <<'PY'
+import json, os
+p = os.path.expanduser("~/.claude/settings.json")
+os.makedirs(os.path.dirname(p), exist_ok=True)
+s = json.load(open(p)) if os.path.exists(p) else {}
+if s.get("remoteControlAtStartup") is not True:
+    s["remoteControlAtStartup"] = True
+    json.dump(s, open(p, "w"), indent=2, ensure_ascii=False)
+    print("remoteControlAtStartup: true em ~/.claude/settings.json")
+PY
+
+# Um servidor só: encerra o que foi aberto à mão no terminal. O novo, na mesma pasta, traz de volta
+# as sessões que aquele servia.
+launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+pkill -f 'claude remote-control' 2>/dev/null && sleep 2 || true
+launchctl bootstrap "$DOMAIN" "$PLIST"
+sleep 5
+launchctl print "$DOMAIN/$LABEL" | grep -E '^\s*(state|pid|last exit code)' || true
+tail -n 5 "$HOME/Library/Logs/bona/remote-control.log" 2>/dev/null || true
+
+cat <<MSG
+
+Instalado: $LABEL servindo $DIR (log: ~/Library/Logs/bona/remote-control.log).
+Passos do João (uma vez, pedem senha):
+  sudo pmset -c sleep 0 womp 1 autorestart 1   # Mini na tomada nunca dorme; volta sozinho após queda de luz
+  Ajustes > Usuários e Grupos > Iniciar sessão automaticamente: bonaos   # LaunchAgent só roda com login
+MSG
