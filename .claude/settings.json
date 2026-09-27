@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "mcp__Bona_Memory__*",
+      "mcp__github__*",
+      "mcp__Notion__*",
+      "Bash(*)"
+    ]
+  }
+}

@@ -6,6 +6,7 @@ entidades, pendências, compromissos, dinheiro).
 | Arquivo | O que é |
 |---|---|
 | [`sistema/MANUAL.md`](sistema/MANUAL.md) | A configuração inteira: papéis, rotinas, regras. Limite de 150 linhas |
+| [`sistema/PLANO.md`](sistema/PLANO.md) | Estado do trabalho e rumo: objetivo, fases, dono e revisor. Muda por PR a cada sessão |
 | [`sistema/LICOES.md`](sistema/LICOES.md) | Por que o manual é assim (lições da v1) |
 | [`sistema/MIGRACAO.md`](sistema/MIGRACAO.md) | Como tirar a configuração antiga do Notion sem quebrar nada |
 | [`mini/`](mini/) | Executor Claude no Mac Mini (`bona-claude-worker`) e roteiro de instalação |
