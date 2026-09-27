@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""bona-saude — vigia do Mini («Cross plataforma always on the go»). Roda a cada 10 min pelo
+LaunchAgent ai.bona.saude. Confere o que deixa o João sem alcance pelo app, nuvem ou DM; conserta
+sozinho só o que é reversível (reiniciar o Remote Control) e escreve o resto como alerta.
+Saída: ~/.bona/saude/ultimo.json (o briefing lê: «silêncio não é saúde») e historico.jsonl.
+Só leitura fora disso: não mata processo, não envia mensagem, não usa sudo."""
+import json, os, re, shutil, subprocess, time, urllib.request
+from datetime import datetime, timezone
+
+HOME = os.path.expanduser("~")
+OUT = os.path.join(HOME, ".bona", "saude")
+UID = os.getuid()
+RC = "ai.bona.remote-control"
+RC_LOG = os.path.join(HOME, "Library", "Logs", "bona", "remote-control.log")
+MAX_CLAUDE_P = int(os.environ.get("BONA_MAX_CLAUDE_P", "6"))    # acima disso: enxurrada
+MAX_AGE_H = float(os.environ.get("BONA_MAX_AGE_H", "6"))         # claude -p mais velho: travado
+MIN_DISK_GB = float(os.environ.get("BONA_MIN_DISK_GB", "10"))
+
+alerts, healed, info = [], [], {}
+
+
+def sh(*cmd, timeout=20):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return r.returncode, r.stdout
+    except Exception as e:  # noqa: BLE001 — vigia não pode cair
+        return 1, str(e)
+
+
+def alert(nivel, chave, texto):
+    alerts.append({"nivel": nivel, "chave": chave, "texto": texto})
+
+
+def rc_state():
+    code, out = sh("launchctl", "print", f"gui/{UID}/{RC}")
+    if code != 0:
+        return "ausente"
+    m = re.search(r"^\s*state = (\S+)", out, re.M)
+    return m.group(1) if m else "desconhecido"
+
+
+# 1. Remote Control: é o que liga as sessões do Mini ao app do celular.
+st = rc_state()
+info["remote_control"] = st
+if st == "ausente":
+    alert("urgente", "rc-ausente", "Remote Control não instalado: rodar mini/always-on/instalar")
+elif st != "running":
+    sh("launchctl", "kickstart", "-k", f"gui/{UID}/{RC}")
+    time.sleep(5)
+    st2 = rc_state()
+    healed.append(f"Remote Control estava {st}; reiniciado → {st2}")
+    if st2 != "running":
+        alert("urgente", "rc-parado", f"Remote Control não sobe ({st2}); ver {RC_LOG}")
+if os.path.exists(RC_LOG):
+    with open(RC_LOG, errors="replace") as f:
+        tail = f.readlines()[-200:]
+    bad = [l.strip() for l in tail if re.search(
+        r"not logged in|log ?in again|unauthori[sz]ed|401|403|BLOQUEIO|must be logged", l, re.I)]
+    if bad:
+        alert("urgente", "rc-login", "Remote Control pede login claude.ai (👤 `claude` → /login): " + bad[-1][:200])
+
+# 2. Todos os LaunchAgents ai.bona.*: parado com erro = serviço caído sem ninguém saber.
+code, out = sh("launchctl", "list")
+agentes = {}
+for line in out.splitlines()[1:]:
+    parts = line.split(None, 2)
+    if len(parts) == 3 and parts[2].startswith("ai.bona."):
+        pid, status, label = parts
+        agentes[label] = {"pid": None if pid == "-" else int(pid), "ultimo_status": status}
+        if pid == "-" and status not in ("0", "-"):
+            alert("importante", f"agente-{label}", f"{label} parado com saída {status}")
+info["agentes"] = agentes
+
+# 3. Processos claude: enxurrada (ex.: 12 ingests duplicados em 27/09) ou travados há horas.
+code, out = sh("ps", "-axo", "pid=,etime=,command=")
+def horas(et):
+    d, _, rest = et.rpartition("-")
+    p = [int(x) for x in rest.split(":")]
+    while len(p) < 3:
+        p.insert(0, 0)
+    return (int(d) if d else 0) * 24 + p[0] + p[1] / 60
+headless = []
+for line in out.splitlines():
+    m = re.match(r"\s*(\d+)\s+(\S+)\s+(.*)", line)
+    if m and re.search(r"(^|/)claude(\s.*)?\s(-p|--print)(\s|$)", m.group(3)):
+        headless.append({"pid": int(m.group(1)), "horas": round(horas(m.group(2)), 1),
+                         "cmd": m.group(3)[:120]})
+info["claude_headless"] = len(headless)
+if len(headless) > MAX_CLAUDE_P:
+    alert("urgente", "enxurrada", f"{len(headless)} processos `claude -p` ao mesmo tempo "
+          f"(teto {MAX_CLAUDE_P}): provável rotina em laço; conferir LaunchAgents/cron")
+velhos = [p for p in headless if p["horas"] > MAX_AGE_H]
+if velhos:
+    alert("importante", "travado", f"{len(velhos)} `claude -p` rodando há mais de {MAX_AGE_H:g} h: "
+          + ", ".join(f"pid {p['pid']} ({p['horas']} h)" for p in velhos[:5]))
+
+# 4. Mini acordado: dormir derruba Remote Control, Bona Memory e WhatsApp juntos.
+code, out = sh("pmset", "-g")
+m = re.search(r"^\s*sleep\s+(\d+)", out, re.M)
+info["sleep_min"] = int(m.group(1)) if m else None
+if m and m.group(1) != "0":
+    alert("importante", "sono", f"Mini dorme após {m.group(1)} min ocioso: 👤 sudo pmset -c sleep 0 womp 1 autorestart 1")
+m = re.search(r"^\s*autorestart\s+(\d+)", out, re.M)
+if m and m.group(1) == "0":
+    alert("informativo", "autorestart", "sem religar após queda de luz: 👤 sudo pmset -c autorestart 1")
+
+# 5. Disco e rede.
+livre = shutil.disk_usage(HOME).free / 1e9
+info["disco_livre_gb"] = round(livre, 1)
+if livre < MIN_DISK_GB:
+    alert("importante", "disco", f"disco com {livre:.1f} GB livres")
+try:
+    urllib.request.urlopen("https://api.anthropic.com", timeout=10)
+    info["rede"] = "ok"
+except urllib.error.HTTPError:
+    info["rede"] = "ok"   # respondeu (404/405): rede e DNS funcionam
+except Exception as e:  # noqa: BLE001
+    info["rede"] = f"falha: {e}"
+    alert("urgente", "rede", "Mini sem acesso à Anthropic: sessões e rotinas param")
+
+ordem = {"urgente": 0, "importante": 1, "informativo": 2}
+alerts.sort(key=lambda a: ordem[a["nivel"]])
+rel = {"checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+       "ok": not any(a["nivel"] != "informativo" for a in alerts),
+       "alertas": alerts, "consertos": healed, "estado": info}
+os.makedirs(OUT, exist_ok=True)
+tmp = os.path.join(OUT, "ultimo.json.tmp")
+with open(tmp, "w") as f:
+    json.dump(rel, f, ensure_ascii=False, indent=2)
+os.replace(tmp, os.path.join(OUT, "ultimo.json"))
+with open(os.path.join(OUT, "historico.jsonl"), "a") as f:
+    f.write(json.dumps({k: rel[k] for k in ("checked_at", "ok", "alertas", "consertos")},
+                       ensure_ascii=False) + "\n")
+print(("OK" if rel["ok"] else "ALERTA") + f" · {len(alerts)} alerta(s) · {len(healed)} conserto(s)")

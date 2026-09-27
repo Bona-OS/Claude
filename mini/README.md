@@ -46,8 +46,8 @@ cat ~/.bona/claude/TESTE-MINI-001/resultado.json
 Acrescentar o destino `claude` ao roteamento existente (`codex.worker_*` → também
 `claude.worker_*`), chamando `bona-claude-worker route|delegate|status`. Mesmo contrato de pedido.
 
-## 7. Remote Control permanente
-Sessões do Mini no app sempre alcançáveis: [`remote-control/README.md`](remote-control/README.md).
+## 7. Always on the go
+Sessões do Mini sempre alcançáveis pelo app e vigia de saúde: [`always-on/README.md`](always-on/README.md).
 
 ## Limites desta versão
 - Ferramentas liberadas: `Read Glob Grep mcp__notion` (variável `BONA_ALLOWED_TOOLS`). Sem Gmail

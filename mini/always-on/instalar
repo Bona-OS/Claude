@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
-# Instala (ou reinstala) o Remote Control permanente do Mini. Idempotente; rodar no Mini:
-#   ~/Bona-OS/Claude/mini/remote-control/instalar [pasta-das-sessões]
-# Desfazer: ~/Bona-OS/Claude/mini/remote-control/instalar --remover
+# «Cross plataforma always on the go» no Mini: Remote Control permanente + vigia de saúde.
+# Idempotente; rodar no Mini:
+#   ~/Bona-OS/Claude/mini/always-on/instalar [pasta-das-sessões]
+# Desfazer: ~/Bona-OS/Claude/mini/always-on/instalar --remover
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 LABEL=ai.bona.remote-control
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+SAUDE=ai.bona.saude
+SAUDE_PLIST="$HOME/Library/LaunchAgents/$SAUDE.plist"
 DOMAIN="gui/$(id -u)"
 
 if [[ "${1:-}" == --remover ]]; then
-  launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
-  rm -f "$PLIST" "$HOME/.local/bin/bona-remote-control"
+  for l in "$SAUDE" "$LABEL"; do launchctl bootout "$DOMAIN/$l" 2>/dev/null || true; done
+  rm -f "$PLIST" "$SAUDE_PLIST" "$HOME/.local/bin/bona-remote-control" "$HOME/.local/bin/bona-saude"
   echo "removido"; exit 0
 fi
 
@@ -21,8 +24,10 @@ DIR="$(cd "$DIR" && pwd)"
 
 mkdir -p "$HOME/.local/bin" "$HOME/Library/LaunchAgents" "$HOME/Library/Logs/bona"
 install -m 755 "$HERE/bona-remote-control" "$HOME/.local/bin/bona-remote-control"
+install -m 755 "$HERE/bona-saude" "$HOME/.local/bin/bona-saude"
 sed -e "s#__HOME__#$HOME#g" -e "s#__DIR__#$DIR#g" "$HERE/$LABEL.plist" > "$PLIST"
-plutil -lint "$PLIST" >/dev/null
+sed -e "s#__HOME__#$HOME#g" "$HERE/$SAUDE.plist" > "$SAUDE_PLIST"
+plutil -lint "$PLIST" "$SAUDE_PLIST" >/dev/null
 
 # Sessões de terminal (`claude` interativo) também entram no Remote Control e, ao contrário do
 # modo servidor, reconectam sozinhas depois de sono ou queda de rede.
@@ -42,13 +47,17 @@ PY
 launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
 pkill -f 'claude remote-control' 2>/dev/null && sleep 2 || true
 launchctl bootstrap "$DOMAIN" "$PLIST"
+launchctl bootout "$DOMAIN/$SAUDE" 2>/dev/null || true
 sleep 5
+launchctl bootstrap "$DOMAIN" "$SAUDE_PLIST"   # roda já e depois a cada 10 min
 launchctl print "$DOMAIN/$LABEL" | grep -E '^\s*(state|pid|last exit code)' || true
 tail -n 5 "$HOME/Library/Logs/bona/remote-control.log" 2>/dev/null || true
+sleep 10; cat "$HOME/.bona/saude/ultimo.json" 2>/dev/null || true
 
 cat <<MSG
 
-Instalado: $LABEL servindo $DIR (log: ~/Library/Logs/bona/remote-control.log).
+Instalado: $LABEL servindo $DIR e $SAUDE a cada 10 min (logs em ~/Library/Logs/bona/,
+relatório em ~/.bona/saude/ultimo.json).
 Passos do João (uma vez, pedem senha):
   sudo pmset -c sleep 0 womp 1 autorestart 1   # Mini na tomada nunca dorme; volta sozinho após queda de luz
   Ajustes > Usuários e Grupos > Iniciar sessão automaticamente: bonaos   # LaunchAgent só roda com login
