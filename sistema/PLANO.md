@@ -48,8 +48,10 @@ obrigação tem revisor de outro LLM · agente pede ao João só decisão, nunca
 | 3 | **Rotinas do Manual** (semana 3): briefing 06h30, radar horário, lint 19h; Grokbot entrega na DM; Claude responde na DM; inbox `00-Celular` por voz | Claude Mini → Grok; Codex na infra | 7 dias de briefing sem falha e sem intervenção do João |
 | 4 | **Fechar vazamentos** (quando 1–3 estáveis): repo privado e GitHub unificado; MIGRACAO (tirar configuração do Notion); WhatsApp multiagente em sandbox | Codex → Claude | Notion só com dados; nenhum segredo em repo público |
 
-Piloto Grok × Claude (ingest da mesma frente) terminou com 7 notas de cada lado; a revisão cruzada
-decide, na fase 2, quem faz volume e quem revisa. Até lá vale a tabela do §4.
+Piloto de ingest da mesma frente, três lados em `wiki-piloto/`: Grok Build 4.7, Claude Code e Codex
+(este por pedido do João em 27/09). Revisão cruzada: Claude revisa Grok e Codex; Grok revisa Claude.
+Critério: toda afirmação com fonte em `raw/`, valores exatos, lacunas declaradas. O resultado decide
+quem faz volume, quem revisa e se o Codex entra no conteúdo ou fica na infraestrutura. Até lá vale o §4.
 
 ## 6. Decisões que só o João fecha
 1. Permissões da sessão do Mini (modo sem classificador) e das sessões da nuvem.
