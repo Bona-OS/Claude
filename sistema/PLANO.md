@@ -17,6 +17,8 @@ copia nem cola. Medida semanal, nesta ordem: vencimento surpresa = 0 · pendênc
 - **Torneiras faltando e vazamentos:** teto de 30 chamadas na ponte (estourou 6× em um dia), Grok sem
   ferramenta na ponte, Claude da nuvem mandando recado ao Codex em vez de executar, repo público com
   histórico sensível, duas fontes de regra por um tempo (Notion antigo × repo).
+- **Sessões do Mini caindo (27/09):** Remote Control saía após ~10 min sem rede/sono e ninguém o
+  subia de novo. Correção: LaunchAgent permanente em [`../mini/always-on/`](../mini/always-on/README.md).
 
 ## 3. Posição de comando: Claude Code no Mini (conta Max)
 Lá o Claude executa (terminal, vault, launchd, Bona Memory local) e chama Grok Build e Codex como

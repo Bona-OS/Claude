@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# «Cross plataforma always on the go» no Mini: Remote Control permanente + vigia de saúde.
+# Idempotente; rodar no Mini:
+#   ~/Bona-OS/Claude/mini/always-on/instalar [pasta-das-sessões]
+# Desfazer: ~/Bona-OS/Claude/mini/always-on/instalar --remover
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+LABEL=ai.bona.remote-control
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+LEGADO=ai.bona.claude-remote-control      # agente anterior (ProcessType Background)
+LEGADO_PLIST="$HOME/Library/LaunchAgents/$LEGADO.plist"
+SAUDE=ai.bona.saude
+SAUDE_PLIST="$HOME/Library/LaunchAgents/$SAUDE.plist"
+DOMAIN="gui/$(id -u)"
+
+if [[ "${1:-}" == --remover ]]; then
+  for l in "$SAUDE" "$LABEL"; do launchctl bootout "$DOMAIN/$l" 2>/dev/null || true; done
+  rm -f "$PLIST" "$SAUDE_PLIST" "$HOME/.local/bin/bona-remote-control" "$HOME/.local/bin/bona-saude"
+  if [[ -f "$LEGADO_PLIST.bak" ]]; then            # devolve o agente anterior
+    mv "$LEGADO_PLIST.bak" "$LEGADO_PLIST"; launchctl bootstrap "$DOMAIN" "$LEGADO_PLIST" || true
+    echo "restaurado: $LEGADO"
+  fi
+  echo "removido"; exit 0
+fi
+
+# Pasta: a do argumento; senão a do agente anterior (para trazer de volta as sessões que ele
+# servia); senão o repo.
+LEGADO_DIR=""
+[[ -f "$LEGADO_PLIST" ]] && LEGADO_DIR="$(plutil -extract WorkingDirectory raw "$LEGADO_PLIST" 2>/dev/null || true)"
+DIR="${1:-${LEGADO_DIR:-$HOME/Bona-OS/Claude}}"
+[[ -d "$DIR" ]] || { echo "BLOQUEIO: pasta ausente: $DIR"; exit 1; }
+DIR="$(cd "$DIR" && pwd)"
+
+mkdir -p "$HOME/.local/bin" "$HOME/Library/LaunchAgents" "$HOME/Library/Logs/bona"
+install -m 755 "$HERE/bona-remote-control" "$HOME/.local/bin/bona-remote-control"
+install -m 755 "$HERE/bona-saude" "$HOME/.local/bin/bona-saude"
+sed -e "s#__HOME__#$HOME#g" -e "s#__DIR__#$DIR#g" "$HERE/$LABEL.plist" > "$PLIST"
+sed -e "s#__HOME__#$HOME#g" "$HERE/$SAUDE.plist" > "$SAUDE_PLIST"
+plutil -lint "$PLIST" "$SAUDE_PLIST" >/dev/null
+
+# Sessões de terminal (`claude` interativo) também entram no Remote Control e, ao contrário do
+# modo servidor, reconectam sozinhas depois de sono ou queda de rede.
+python3 - <<'PY'
+import json, os
+p = os.path.expanduser("~/.claude/settings.json")
+os.makedirs(os.path.dirname(p), exist_ok=True)
+s = json.load(open(p)) if os.path.exists(p) else {}
+if s.get("remoteControlAtStartup") is not True:
+    s["remoteControlAtStartup"] = True
+    json.dump(s, open(p, "w"), indent=2, ensure_ascii=False)
+    print("remoteControlAtStartup: true em ~/.claude/settings.json")
+PY
+
+# Um servidor só por pasta (o claude recusa o segundo). Tira o agente anterior (plist guardado
+# em .bak) e qualquer servidor aberto à mão; o novo, na mesma pasta, traz de volta as sessões.
+if [[ -f "$LEGADO_PLIST" ]]; then
+  launchctl bootout "$DOMAIN/$LEGADO" 2>/dev/null || true
+  mv "$LEGADO_PLIST" "$LEGADO_PLIST.bak"
+  echo "agente anterior $LEGADO desligado (plist em .bak)"
+fi
+launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+pkill -TERM -f 'claude remote-control' 2>/dev/null || true
+for _ in 1 2 3 4 5 6 7 8 9 10; do pgrep -f 'claude remote-control' >/dev/null || break; sleep 1; done
+pkill -KILL -f 'claude remote-control' 2>/dev/null || true   # o claude pode ignorar SIGTERM
+sleep 1
+launchctl bootstrap "$DOMAIN" "$PLIST"
+launchctl bootout "$DOMAIN/$SAUDE" 2>/dev/null || true
+sleep 5
+launchctl bootstrap "$DOMAIN" "$SAUDE_PLIST"   # roda já e depois a cada 10 min
+launchctl print "$DOMAIN/$LABEL" | grep -E '^\s*(state|pid|last exit code)' || true
+tail -n 5 "$HOME/Library/Logs/bona/remote-control.log" 2>/dev/null || true
+sleep 10; cat "$HOME/.bona/saude/ultimo.json" 2>/dev/null || true
+
+cat <<MSG
+
+Instalado: $LABEL servindo $DIR e $SAUDE a cada 10 min (logs em ~/Library/Logs/bona/,
+relatório em ~/.bona/saude/ultimo.json).
+Passos do João (uma vez, pedem senha):
+  sudo pmset -c sleep 0 womp 1 autorestart 1   # Mini na tomada nunca dorme; volta sozinho após queda de luz
+  Ajustes > Usuários e Grupos > Iniciar sessão automaticamente: bonaos   # LaunchAgent só roda com login
+MSG
