@@ -59,6 +59,12 @@ if os.path.exists(RC_LOG):
     if bad:
         alert("urgente", "rc-login", "Remote Control pede login claude.ai (👤 `claude` → /login): " + bad[-1][:200])
 
+servidores = [l for l in sh("pgrep", "-fl", "claude remote-control")[1].splitlines() if l.strip()]
+info["servidores_rc"] = len(servidores)
+if len(servidores) > 1:
+    alert("importante", "rc-duplicado", f"{len(servidores)} servidores Remote Control: agente antigo "
+          "ainda ativo? rodar mini/always-on/instalar")
+
 # 2. Todos os LaunchAgents ai.bona.*: parado com erro = serviço caído sem ninguém saber.
 code, out = sh("launchctl", "list")
 agentes = {}

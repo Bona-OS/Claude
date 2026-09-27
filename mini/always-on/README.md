@@ -9,6 +9,12 @@ o `claude remote-control` em modo servidor desiste depois de ~10 min sem rede ou
 (`computer_unreachable` em todas as sessões do Mini em 26–27/09). Duas agravantes: o macOS congela
 processo de launchd quando o Mac fica ocioso, e o Mini podia dormir.
 
+**Achado no Mini (27/09):** já havia `ai.bona.claude-remote-control` com KeepAlive, mas como
+`Background` (congelado com o Mini ocioso) e `--permission-mode default` (sessão parada esperando
+aprovação de Bash). O instalador o desliga (plist guardado em `.bak`; `--remover` devolve) e serve a
+mesma pasta, para as sessões voltarem. Sessões pelo app sobem em acesso total (`bypassPermissions`,
+autorização do João em 27/09); `BONA_RC_PERMISSION` no plist muda isso.
+
 **Correção:** LaunchAgent `ai.bona.remote-control` com `KeepAlive` (caiu → sobe em ≤ 30 s),
 `ProcessType=Interactive` (sem congelamento por ociosidade) e `caffeinate` (sem sono enquanto roda).
 Reiniciado dentro de ~4 h, o servidor traz de volta as sessões que servia: voltar ao app = continuar

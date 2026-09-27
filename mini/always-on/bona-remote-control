@@ -8,6 +8,9 @@ set -uo pipefail
 
 DIR="${BONA_RC_DIR:-$HOME/Bona-OS/Claude}"
 NAME="${BONA_RC_NAME:-Bona Mini}"
+# Acesso total nas sessões pelo app (João, 27/09: «não precisarei mais aprovar nada, nem bash»).
+# Sessão esperando aprovação parece «em execução» e não responde. Mais cauteloso: acceptEdits.
+PERM="${BONA_RC_PERMISSION:-bypassPermissions}"
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 # Remote Control exige o login claude.ai completo; token de inferência ou chave de API atrapalham.
 unset CLAUDE_CODE_OAUTH_TOKEN ANTHROPIC_API_KEY
@@ -18,4 +21,4 @@ command -v claude >/dev/null || { echo "$(ts) BLOQUEIO: claude não instalado"; 
 
 echo "$(ts) iniciando remote-control em $DIR ($(claude --version))"
 # caffeinate: impede o sono do sistema enquanto o servidor roda (-i ocioso, -s na tomada, -m disco).
-exec caffeinate -ims claude remote-control --name "$NAME" --verbose
+exec caffeinate -ims claude remote-control --name "$NAME" --permission-mode "$PERM" --verbose
