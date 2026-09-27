@@ -17,7 +17,7 @@ de onde parou. Sessões abertas à mão no terminal ganham `remoteControlAtStart
 ## Instalar (no Mini, uma vez)
 ```bash
 cd ~/Bona-OS/Claude && git pull origin main
-mini/remote-control/instalar            # pasta padrão: ~/Bona-OS/Claude
+mini/always-on/instalar            # pasta padrão: ~/Bona-OS/Claude
 ```
 👤 Depois, com senha: `sudo pmset -c sleep 0 womp 1 autorestart 1` e login automático do usuário
 `bonaos` (LaunchAgent só roda com sessão aberta).
@@ -27,7 +27,7 @@ mini/remote-control/instalar            # pasta padrão: ~/Bona-OS/Claude
 launchctl print gui/$(id -u)/ai.bona.remote-control | grep -E 'state|pid'
 tail -f ~/Library/Logs/bona/remote-control.log
 launchctl kickstart -k gui/$(id -u)/ai.bona.remote-control   # forçar reinício
-mini/remote-control/instalar --remover                       # desfazer
+mini/always-on/instalar --remover                       # desfazer
 ```
 Sessão parada há mais de ~4 h não volta sozinha: abrir nova no app (mesma pasta, mesmo repo).
 Sessão parada esperando aprovação aparece como «precisa de ação»: ligar em `/config` o
